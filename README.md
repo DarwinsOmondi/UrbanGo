@@ -21,7 +21,6 @@ Database: Firebase for real-time updates, PostgreSQL for persistent data.
 Mapping: Google Maps API or OpenStreetMap for location tracking.
 Real-Time Communication:Firebase Realtime Database for live updates.
 
-
 **Why It’s Impactful**:
 Community-Driven: Allows users to share real-time information to improve the public transport experience for everyone.
 Increased Accessibility: Special features designed to cater to people with disabilities.
