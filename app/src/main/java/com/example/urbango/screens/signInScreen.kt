@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,38 +52,33 @@ import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(
-    onNavigateToLogin: () -> Unit = {},
-    onSignUpSuccess: () -> Unit = {},
-    auth:FirebaseAuth
-){
+fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignInSuccess: () -> Unit = {}){
     val scope = rememberCoroutineScope()
-    var userName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-
-    Scaffold(
+    Scaffold (
         Modifier.background(Color(0xFFFFFFFF))
-    ) { paddingValues ->
-        Box (
-            modifier = Modifier
+    ){ paddingValue ->
+        Box(
+            Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-        ){
-            Column (
+                .padding(paddingValue)
+        ) {
+            Column(
                 Modifier.fillMaxWidth()
             ){
-                Box (modifier = Modifier.fillMaxWidth()){
-
+                Box (
+                    Modifier.fillMaxWidth()
+                ){
                     Row (
                         Modifier.align(Alignment.TopEnd)
-                            .padding(16.dp)
+                            .padding(8.dp)
                     ){
-                        Text("Already have an account ?",
+                        Text("Don't have an account ?",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -94,48 +89,24 @@ fun SignUpScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
-                                onNavigateToLogin()
+                                onNavigateToSignUp()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF61ABF3)),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Sign In")
+                            Text("Sign Up")
                         }
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Image(
+                        painter = painterResource(R.drawable.signinimage),
+                        contentDescription = null,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .fillMaxHeight(0.5f),
+                    )
                 }
-                Image(
-                    painter = painterResource(R.drawable.signiupimage),
-                    contentDescription = null,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .fillMaxHeight(0.5f),
-                    contentScale = ContentScale.Crop
-                )
-                OutlinedTextField(
-                    value = userName,
-                    onValueChange = {userName = it},
-                    label = {
-                        Text("Username",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
-                )
-
+                Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = {email = it},
@@ -194,18 +165,18 @@ fun SignUpScreen(
                         }
                     }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
                         scope.launch {
                             isLoading = true
-                            val results = signUpUser(auth,userName,email,password)
+                            val results = signInUser(auth,email,password)
                             if (results.isSuccess){
-                                onSignUpSuccess()
+                                onSignInSuccess()
                             }else{
                                 errorMessage = results.exceptionOrNull()?.message
                                 isLoading = false
                             }
-                            isLoading = false
                         }
                     },
                     modifier = Modifier
@@ -223,7 +194,7 @@ fun SignUpScreen(
                         )
                     }else{
                         Text(
-                            "Sign Up",
+                            "Sign In",
                             style = TextStyle(
                                 color = Color.White,
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
@@ -237,26 +208,25 @@ fun SignUpScreen(
     }
 }
 
-private suspend fun signUpUser(auth:FirebaseAuth,userName:String,userEmail:String,userPassword:String) :Result<Unit> {
-  return  try {
-        if (userName.isNotEmpty() && userEmail.isNotEmpty() && userPassword.isNotEmpty()){
-            auth.createUserWithEmailAndPassword(userEmail,userPassword).await()
+private suspend fun signInUser(auth: FirebaseAuth, email: String, password: String):Result<Unit>{
+    return try {
+        if (email.isNotBlank() && password.isNotBlank()){
+            auth.signInWithEmailAndPassword(email, password).await()
             Result.success(Unit)
         }else{
-            Result.failure(Exception("Please fill every fields"))
+            Result.failure(Exception("Email and password cannot be empty"))
         }
-    }catch (e:Exception){
-        return Result.failure(e)
+        }catch (e:Exception){
+            Result.failure(e)
     }
-
 }
 
 @Preview(showBackground = true)
 @Composable
-fun SignUpPreview(){
-    SignUpScreen(
-        onNavigateToLogin = {},
-        onSignUpSuccess = {},
-        auth = FirebaseAuth.getInstance()
+fun SignInPreview(){
+    SignInScreen(
+        auth = FirebaseAuth.getInstance(),
+        onNavigateToSignUp = {},
+        onSignInSuccess = {}
     )
 }

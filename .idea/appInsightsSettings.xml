@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.urbango" />
+                  <option name="mobileSdkAppId" value="1:952372720472:android:c6418466771a4f099feb2d" />
+                  <option name="projectId" value="urbango-e76ee" />
+                  <option name="projectNumber" value="952372720472" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
