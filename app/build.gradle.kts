@@ -61,4 +61,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.osmdroid.android) // OSMDroid SDK
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

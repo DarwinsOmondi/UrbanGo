@@ -12,8 +12,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.urbango.screens.CameraScreen
 import com.example.urbango.screens.HomeScreen
 import com.example.urbango.screens.OnboardingScreen
+import com.example.urbango.screens.ReportScreen
 import com.example.urbango.screens.SignInScreen
 import com.example.urbango.screens.SignUpScreen
 import com.example.urbango.ui.theme.UrbanGoTheme
@@ -26,7 +28,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val auth = FirebaseAuth.getInstance()
-            UrbanGoApp(navController,auth)
+            UrbanGoTheme {
+                UrbanGoApp(navController,auth)
+            }
         }
     }
 }
@@ -34,12 +38,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
-    val startDestination = remember { mutableStateOf("") }
+    val startDestination :String
 
     if (auth.currentUser != null){
-        startDestination.value = "home"
+        startDestination = "home"
     }else{
-        startDestination.value = "onboarding"
+        startDestination = "onboarding"
     }
     NavHost(navController = navController, startDestination = startDestination){
         composable("onboarding"){
@@ -72,7 +76,15 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
             )
         }
         composable("home"){
-            HomeScreen()
+            HomeScreen(navController)
+        }
+        composable("reports"){
+            ReportScreen(navController,onNavigateToCameraScreen = {
+                navController.navigate("camera")
+            })
+        }
+        composable("camera"){
+            CameraScreen()
         }
     }
 }
