@@ -3,8 +3,11 @@ package com.example.urbango.screens
 import android.content.Context
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -49,45 +52,52 @@ fun HomeScreen(navController: NavHostController,onNavigateToReportScreen: () -> 
 
 @Composable
 fun OSMDroidMapView(modifier: Modifier = Modifier, context: Context, locationPermissionGranted: Boolean,locationViewModel: PermissionViewModel) {
-    AndroidView(
-        factory = { appContext -> // Renamed the inner context to appContext
-            MapView(appContext).apply {
-                setTileSource(TileSourceFactory.MAPNIK)
-                controller.setZoom(15.0)
+    Column {
+        AndroidView(
+            factory = { appContext -> // Renamed the inner context to appContext
+                MapView(appContext).apply {
+                    setTileSource(TileSourceFactory.MAPNIK)
+                    controller.setZoom(15.0)
 
-                // Enable multitouch controls (pinch-to-zoom)
-                setMultiTouchControls(true)
+                    // Enable multitouch controls (pinch-to-zoom)
+                    setMultiTouchControls(true)
 
-                // Enable location tracking
-                val locationOverlay = MyLocationNewOverlay(this)
-                locationOverlay.enableMyLocation()
-                overlays.add(locationOverlay)
+                    // Enable location tracking
+                    val locationOverlay = MyLocationNewOverlay(this)
+                    locationOverlay.enableMyLocation()
+                    overlays.add(locationOverlay)
 
-                // If permission is granted, enable location tracking
-                if (locationPermissionGranted) {
-                    locationOverlay.enableFollowLocation()
-                } else {
-                    // Request permission if not granted
-                   locationViewModel.requestLocationPermission(context)
-                }
+                    // If permission is granted, enable location tracking
+                    if (locationPermissionGranted) {
+                        locationOverlay.enableFollowLocation()
+                    } else {
+                        // Request permission if not granted
+                        locationViewModel.requestLocationPermission(context)
+                    }
 
-                // Add a marker for the user's location
-                locationOverlay.run {
-                    if (myLocation != null) {
-                        controller.setCenter(myLocation)
-                        val marker = Marker(this@apply)
-                        marker.position = GeoPoint(myLocation.latitude, myLocation.longitude)
-                        marker.title = "You are here"
-                        overlays.add(marker)
+                    // Add a marker for the user's location
+                    locationOverlay.run {
+                        if (myLocation != null) {
+                            controller.setCenter(myLocation)
+                            val marker = Marker(this@apply)
+                            marker.position = GeoPoint(myLocation.latitude, myLocation.longitude)
+                            marker.title = "You are here"
+                            overlays.add(marker)
+                        }
                     }
                 }
+            },
+            modifier = modifier,
+            update = { mapView ->
+                mapView.onResume() // Handle onResume lifecycle
             }
-        },
-        modifier = modifier,
-        update = { mapView ->
-            mapView.onResume() // Handle onResume lifecycle
+        )
+        FloatingActionButton(
+            onClick = {}
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add")
         }
-    )
+    }
 }
 
 
