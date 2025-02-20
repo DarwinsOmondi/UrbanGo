@@ -11,7 +11,6 @@ Delay Alerts: Receive notifications about delays or cancellations of your transp
 Route Optimization: Find the fastest routes, including walking, biking, and ride-sharing options.
 Accessibility Features: Highlight accessible routes for people with disabilities or those traveling with strollers.
 
-
 **Stretch Goals**:
 AI Predictions: Use machine learning to predict delays based on historical data and real-time updates.
 Micro-Mobility Integration: Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for last-mile connectivity.
