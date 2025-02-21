@@ -1,5 +1,4 @@
 **UrbanGo**
-
 UrbanGo is an innovative mobile app designed to help commuters navigate public transport systems with ease. By providing real-time updates on bus/train locations, delays, and alternative routes, the app empowers users to make informed decisions while traveling.
 
 This app leverages GPS data from public transport vehicles and crowdsourced updates from users to offer accurate, real-time tracking, delay alerts, and route optimization, making public transport journeys more efficient and stress-free.
