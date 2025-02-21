@@ -1,15 +1,7 @@
 package com.example.urbango.screens
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Environment
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
+import android.preference.PreferenceManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,14 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,21 +38,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.viewModels.PermissionViewModel
+import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.io.File
-import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navController: NavHostController,onNavigateToCameraScreen:()-> Unit) {
-    val CardColors = listOf(
+    val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
         Color(0xFF1E88E5), // Lighter Blue
         Color(0xFF64B5F6), // Soft Blue
@@ -79,7 +66,7 @@ fun ReportScreen(navController: NavHostController,onNavigateToCameraScreen:()-> 
     val context = LocalContext.current
     val locationViewModel: PermissionViewModel = viewModel()
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
-    val cardColor by remember { mutableStateOf(CardColors.random()) }
+    val cardColor by remember { mutableStateOf(cardColors.random()) }
 
     Scaffold(
         topBar = {
@@ -109,32 +96,42 @@ fun ReportMap(
     locationPermissionGranted: Boolean,
     locationViewModel: PermissionViewModel,
     cardColor: Color,
-    onNavigateToCameraScreen:() -> Unit
+    onNavigateToCameraScreen: () -> Unit
 ) {
     var reportDetails by remember { mutableStateOf("") }
+    var selectedCardTitle by remember { mutableStateOf("") } // Store selected card title
+    var selectedGeoPoint by remember { mutableStateOf<GeoPoint?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(4.dp)
     ) {
-        Text("Help other commuters by reporting delays, overcrowding, or incidents in real time.",style = MaterialTheme.typography.bodyMedium)
+        Text(
+            "Help other commuters by reporting delays, overcrowding, or incidents in real time.",
+            style = MaterialTheme.typography.bodyMedium
+        )
         Spacer(modifier = Modifier.height(40.dp))
 
-        CardView(cardItems = listOfCardItems, modifier = Modifier.height(100.dp),cardColor)
+        // Pass lambda to update selected card title
+        CardView(
+            cardItems = listOfCardItems,
+            modifier = Modifier.height(100.dp),
+            cardColor = cardColor,
+            onCardClick = { title -> selectedCardTitle = title }
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
+
         OutlinedTextField(
             value = reportDetails,
             onValueChange = { reportDetails = it },
             label = { Text("Report Type") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(16.dp),
             trailingIcon = {
-                IconButton(
-                    onClick = {
-                        onNavigateToCameraScreen()
-                    }
-                ) {
+                IconButton(onClick = { onNavigateToCameraScreen() }) {
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 }
             },
@@ -147,15 +144,18 @@ fun ReportMap(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp),
-            factory = { context ->
-                MapView(context).apply {
+            factory = { ctx ->
+                Configuration.getInstance().userAgentValue = ctx.packageName
+                Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+                MapView(ctx).apply {
                     setTileSource(TileSourceFactory.MAPNIK)
                     controller.setZoom(15.0)
                     setMultiTouchControls(true)
                     clipToOutline = true
 
-                    val locationOverlay = MyLocationNewOverlay(this)
-                    locationOverlay.enableMyLocation()
+                    val locationOverlay = MyLocationNewOverlay(this).apply {
+                        enableMyLocation()
+                    }
                     overlays.add(locationOverlay)
 
                     if (locationPermissionGranted) {
@@ -167,10 +167,23 @@ fun ReportMap(
                     locationOverlay.run {
                         if (myLocation != null) {
                             controller.setCenter(myLocation)
-                            val marker = Marker(this@apply)
-                            marker.position = GeoPoint(myLocation.latitude, myLocation.longitude)
-                            marker.title = "Report here"
-                            overlays.add(marker)
+                        }
+                    }
+
+                    // Set up touch listener with performClick()
+                    setOnTouchListener { view, event ->
+                        if (event.action == android.view.MotionEvent.ACTION_UP) {
+                            val projection = projection
+                            val geoPoint = projection.fromPixels(event.x.toInt(), event.y.toInt()) as GeoPoint
+                            selectedGeoPoint = geoPoint
+
+                            // Update report details with selected card title + location
+                            reportDetails = "$selectedCardTitle, ${selectedGeoPoint!!.latitude}, ${selectedGeoPoint!!.longitude}"
+
+                            view.performClick() // Call performClick for accessibility
+                            true
+                        } else {
+                            false
                         }
                     }
                 }
@@ -178,14 +191,35 @@ fun ReportMap(
             update = { mapView ->
                 mapView.onResume()
                 mapView.clipToOutline = true
+
+                selectedGeoPoint?.let { geoPoint ->
+                    // Clear existing markers
+                    mapView.overlays.removeAll { it is Marker }
+
+                    // Add marker at tapped location
+                    val marker = Marker(mapView).apply {
+                        position = geoPoint
+                        title = "Report Here"
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    }
+
+                    mapView.overlays.add(marker)
+                    mapView.controller.animateTo(geoPoint)
+                    mapView.invalidate()
+                }
             }
         )
-
     }
 }
 
+
 @Composable
-fun CardView(cardItems: List<CardItem.CardItems>, modifier: Modifier = Modifier,cardColor: Color) {
+fun CardView(
+    cardItems: List<CardItem.CardItems>,
+    modifier: Modifier = Modifier,
+    cardColor: Color,
+    onCardClick: (String) -> Unit // Callback for updating selected title
+) {
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
@@ -197,7 +231,9 @@ fun CardView(cardItems: List<CardItem.CardItems>, modifier: Modifier = Modifier,
                     .padding(8.dp)
                     .height(250.dp)
                     .width(200.dp),
-                onClick = { /* Handle card click */ },
+                onClick = {
+                    onCardClick(cardItem.title) // Pass selected card title
+                },
                 elevation = CardDefaults.cardElevation(4.dp),
                 colors = CardDefaults.cardColors(cardColor)
             ) {
@@ -214,14 +250,15 @@ fun CardView(cardItems: List<CardItem.CardItems>, modifier: Modifier = Modifier,
     }
 }
 
+
 sealed class CardItem(val title: String) {
-    sealed class CardItems(val content: String) : CardItem(title = content) {
-        object Card1 : CardItems("⏳ Delay")
-        object Card2 : CardItems("⚠\uFE0F Accident")
-        object Card3 : CardItems("\uD83D\uDE8D Overcrowding")
-        object Card4 : CardItems("❌ Cancellation")
-        object Card5 : CardItems("\uD83D\uDEA6 Traffic Jam")
-        object Card6 : CardItems("\uD83D\uDED1 Other ")
+    sealed class CardItems(content: String) : CardItem(title = content) {
+        data object Card1 : CardItems("⏳ Delay")
+        data object Card2 : CardItems("⚠\uFE0F Accident")
+        data object Card3 : CardItems("\uD83D\uDE8D Overcrowding")
+        data object Card4 : CardItems("❌ Cancellation")
+        data object Card5 : CardItems("\uD83D\uDEA6 Traffic Jam")
+        data object Card6 : CardItems("\uD83D\uDED1 Other ")
     }
 }
 
