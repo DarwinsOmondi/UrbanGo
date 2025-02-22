@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -99,7 +101,7 @@ fun ReportMap(
     onNavigateToCameraScreen: () -> Unit
 ) {
     var reportDetails by remember { mutableStateOf("") }
-    var selectedCardTitle by remember { mutableStateOf("") } // Store selected card title
+    var selectedCardTitle by remember { mutableStateOf("") }
     var selectedGeoPoint by remember { mutableStateOf<GeoPoint?>(null) }
 
     Column(
@@ -126,7 +128,7 @@ fun ReportMap(
         OutlinedTextField(
             value = reportDetails,
             onValueChange = { reportDetails = it },
-            label = { Text("Report Type") },
+            label = { Text("Report Issue") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -138,77 +140,80 @@ fun ReportMap(
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp)
         )
 
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
-            factory = { ctx ->
-                Configuration.getInstance().userAgentValue = ctx.packageName
-                Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
-                MapView(ctx).apply {
-                    setTileSource(TileSourceFactory.MAPNIK)
-                    controller.setZoom(15.0)
-                    setMultiTouchControls(true)
-                    clipToOutline = true
+    Box(Modifier.height(800.dp)){
+         AndroidView(
+        modifier = Modifier
+            .wrapContentHeight()
+            .align(Alignment.BottomCenter)
+            .height(800.dp),
+        factory = { ctx ->
+            Configuration.getInstance().userAgentValue = ctx.packageName
+            Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+            MapView(ctx).apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                controller.setZoom(15.0)
+                setMultiTouchControls(true)
+                clipToOutline = true
 
-                    val locationOverlay = MyLocationNewOverlay(this).apply {
-                        enableMyLocation()
-                    }
-                    overlays.add(locationOverlay)
+                val locationOverlay = MyLocationNewOverlay(this).apply {
+                    enableMyLocation()
+                }
+                overlays.add(locationOverlay)
 
-                    if (locationPermissionGranted) {
-                        locationOverlay.enableFollowLocation()
-                    } else {
-                        locationViewModel.requestLocationPermission(context)
-                    }
+                if (locationPermissionGranted) {
+                    locationOverlay.enableFollowLocation()
+                } else {
+                    locationViewModel.requestLocationPermission(context)
+                }
 
-                    locationOverlay.run {
-                        if (myLocation != null) {
-                            controller.setCenter(myLocation)
-                        }
-                    }
-
-                    // Set up touch listener with performClick()
-                    setOnTouchListener { view, event ->
-                        if (event.action == android.view.MotionEvent.ACTION_UP) {
-                            val projection = projection
-                            val geoPoint = projection.fromPixels(event.x.toInt(), event.y.toInt()) as GeoPoint
-                            selectedGeoPoint = geoPoint
-
-                            // Update report details with selected card title + location
-                            reportDetails = "$selectedCardTitle, ${selectedGeoPoint!!.latitude}, ${selectedGeoPoint!!.longitude}"
-
-                            view.performClick() // Call performClick for accessibility
-                            true
-                        } else {
-                            false
-                        }
+                locationOverlay.run {
+                    if (myLocation != null) {
+                        controller.setCenter(myLocation)
                     }
                 }
-            },
-            update = { mapView ->
-                mapView.onResume()
-                mapView.clipToOutline = true
 
-                selectedGeoPoint?.let { geoPoint ->
-                    // Clear existing markers
-                    mapView.overlays.removeAll { it is Marker }
+                // Set up touch listener with performClick()
+                setOnTouchListener { view, event ->
+                    if (event.action == android.view.MotionEvent.ACTION_UP) {
+                        val projection = projection
+                        val geoPoint = projection.fromPixels(event.x.toInt(), event.y.toInt()) as GeoPoint
+                        selectedGeoPoint = geoPoint
 
-                    // Add marker at tapped location
-                    val marker = Marker(mapView).apply {
-                        position = geoPoint
-                        title = "Report Here"
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        // Update report details with selected card title + location
+                        reportDetails = "$selectedCardTitle, ${selectedGeoPoint!!.latitude}, ${selectedGeoPoint!!.longitude}"
+
+                        view.performClick() // Call performClick for accessibility
+                        true
+                    } else {
+                        false
                     }
-
-                    mapView.overlays.add(marker)
-                    mapView.controller.animateTo(geoPoint)
-                    mapView.invalidate()
                 }
             }
-        )
+        },
+        update = { mapView ->
+            mapView.onResume()
+            mapView.clipToOutline = true
+
+            selectedGeoPoint?.let { geoPoint ->
+                // Clear existing markers
+                mapView.overlays.removeAll { it is Marker }
+
+                // Add marker at tapped location
+                val marker = Marker(mapView).apply {
+                    position = geoPoint
+                    title = "Report Here"
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                }
+
+                mapView.overlays.add(marker)
+                mapView.controller.animateTo(geoPoint)
+                mapView.invalidate()
+            }
+                 }
+             )
+        }
     }
 }
 
@@ -270,3 +275,9 @@ val listOfCardItems = listOf(
     CardItem.CardItems.Card5,
     CardItem.CardItems.Card6,
 )
+
+@Preview(showBackground = true)
+@Composable
+fun ReportScreenPreview(){
+    ReportScreen(navController = NavHostController(LocalContext.current), onNavigateToCameraScreen ={})
+}
