@@ -15,7 +15,6 @@ AI Predictions: Use machine learning to predict delays based on historical data 
 Micro-Mobility Integration: Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for last-mile connectivity.
 Offline Mode: Allow users to access route data even in areas with limited internet connectivity.
 
-
 **Tech Stack**:
 Frontend: Jetpack Compose (for Android).
 Database: Firebase for real-time updates, PostgreSQL for persistent data.
