@@ -17,10 +17,8 @@ Offline Mode: Allow users to access route data even in areas with limited intern
 
 **Tech Stack**:
 Frontend: Jetpack Compose (for Android).
-Database: Firebase for real-time updates, PostgreSQL for persistent data.
+Database: Firebase for real-time updates.
 Mapping: Google Maps API or OpenStreetMap for location tracking.
-Real-Time Communication:Firebase Realtime Database for live updates.
-
 
 **Why It’s Impactful**:
 Community-Driven: Allows users to share real-time information to improve the public transport experience for everyone.
