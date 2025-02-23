@@ -1,5 +1,6 @@
 package com.example.urbango
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,7 +13,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.urbango.screens.CameraScreen
 import com.example.urbango.screens.HomeScreen
 import com.example.urbango.screens.OnboardingScreen
 import com.example.urbango.screens.ReportScreen
@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
+    val imageUriState = remember { mutableStateOf<Uri?>(null) }
     val startDestination :String
 
     if (auth.currentUser != null){
@@ -78,13 +79,10 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
         composable("home"){
             HomeScreen(navController)
         }
-        composable("reports"){
-            ReportScreen(navController,onNavigateToCameraScreen = {
-                navController.navigate("camera")
-            })
-        }
-        composable("camera"){
-            CameraScreen()
+        composable("reports") {
+            ReportScreen(
+                navController = navController,
+            )
         }
     }
 }
