@@ -1,150 +1,90 @@
 package com.example.urbango.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowCircleDown
-import androidx.compose.material.icons.filled.ArrowCircleUp
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.viewModels.DelayReport
+import com.example.urbango.viewModels.DelayReportViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CrowdSourcedScreen(navController:NavHostController){
+fun CrowdedScreen(navController: NavHostController) {
+    val viewModel: DelayReportViewModel = viewModel()
+    val delayReports by viewModel.delayReports.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Fetch reports when the screen is loaded
+    LaunchedEffect(Unit) {
+        viewModel.fetchDelayReports()
+    }
+
+    val filteredReports = delayReports.filter { report ->
+        val areaName = remember { mutableStateOf<String?>(null) }
+        viewModel.fetchAreaName(LocalContext.current, report.latitude, report.longitude) { name ->
+            areaName.value = name
+        }
+        areaName.value?.contains(searchQuery, ignoreCase = true) == true
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("CrowdSourced", style = MaterialTheme.typography.titleMedium) })
+            TopAppBar(title = { Text("Crowded Reports") })
         },
-        bottomBar ={
+        bottomBar = {
             BottomNavigationBar(navController)
         }
-    ){ paddingValue ->
-        CrowdScreen(Modifier.padding(paddingValue))
-    }
-}
-
-@Composable
-fun CrowdScreen(
-    modifier: Modifier,
-) {
-    var searchAlert by remember { mutableStateOf("") }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(4.dp)
-    ) {
-        OutlinedTextField(
-            value = searchAlert,
-            onValueChange = { searchAlert = it },
-            label = { Text("Search") },
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            trailingIcon = {
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
-                }
-            },
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp)
-        )
-
-        Spacer(modifier = Modifier.height(60.dp))
-    }
-}
-
-val AlertItems = listOf<String>(
-    "Cat","Dog","Camel","Hen","Tiger","Lion","Giraffe"
-)
-@Composable
-fun DataCardView(
-    alertList:List<String>
-){
-    val voted by remember { mutableStateOf(false) }
-    Box(
-        Modifier.fillMaxWidth()
-    ) {
-        Card(
-            onClick = {},
-            shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 15.dp, bottomEnd = 15.dp),
-            colors = CardDefaults.cardColors(Color.Gray),
-            elevation = CardDefaults.cardElevation(4.dp),
-            modifier = Modifier.fillMaxWidth()
-                .padding(4.dp)
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
         ) {
-            alertList.forEach { item ->
-                Text(item)
-            }
-            Box(Modifier.fillMaxWidth()){
-                Row(Modifier.align(Alignment.BottomEnd)){
-                    IconButton(
-                        onClick = {
-                            voted != voted
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            if (voted){
-                                Color.Green
-                            }else{
-                                Color.White
-                            }
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowCircleUp,
-                            contentDescription = "Vote Down",
-                        )
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    IconButton(
-                        onClick = {
-                            voted != voted
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            if (voted){
-                                Color.Red
-                            }else{
-                                Color.White
-                            }
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowCircleDown,
-                            contentDescription = "Vote Down",
-                        )
-                    }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Search by Area Name") },
+                modifier = Modifier.fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor =Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(filteredReports) { report ->
+                    DelayReportCard(
+                        report = report,
+                        onUpvote = { viewModel.upvoteReport(report.documentId) },
+                        onDownvote = { viewModel.downvoteReport(report.documentId) }
+                    )
                 }
             }
         }
@@ -152,15 +92,70 @@ fun DataCardView(
 }
 
 
-
-//@Preview(showBackground = true)
-//@Composable
-//fun CrowdSourcedScreenPreview(){
-//    CrowdSourcedScreen(navController = NavHostController(LocalContext.current))
-//}
-
-@Preview(showBackground = true)
 @Composable
-fun DataCardViewPreview(){
-    DataCardView(AlertItems)
+fun DelayReportCard(
+    report: DelayReport,
+    onUpvote: () -> Unit,
+    onDownvote: () -> Unit
+) {
+    val auth = FirebaseAuth.getInstance()
+    val userId = auth.currentUser?.uid
+    val userVote = report.votedUsers[userId]
+    var areaName by remember { mutableStateOf<String?>(null) }
+    val delayReportViewModel: DelayReportViewModel = viewModel()
+
+    val accuracyPercentage = delayReportViewModel.calculateAccuracyPercentage(report.upvotes, report.downvotes)
+
+
+
+    delayReportViewModel.fetchAreaName(LocalContext.current, report.latitude, report.longitude) { name ->
+        areaName = name
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Report by : ${report.userId}",
+                style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "Problem : ${report.problemReport}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            areaName?.let { Text(text = "Area: $it") }
+            Text(
+                text = "Accuracy: $accuracyPercentage%",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                IconButton(onClick = onUpvote) {
+                    Icon(
+                        imageVector = Icons.Default.ThumbUp,
+                        contentDescription = "Upvote",
+                        tint = if (userVote == "upvote") Color.Green else Color.Gray
+                    )
+                }
+                Text(text = "${report.upvotes}")
+                IconButton(onClick = onDownvote) {
+                    Icon(
+                        imageVector = Icons.Default.ThumbDown,
+                        contentDescription = "Downvote",
+                        tint = if (userVote == "downvote") Color.Red else Color.Gray
+                    )
+                }
+                Text(text = "${report.downvotes}")
+            }
+        }
+    }
 }

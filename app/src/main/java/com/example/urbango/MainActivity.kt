@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.urbango.screens.CrowdedScreen
 import com.example.urbango.screens.HomeScreen
 import com.example.urbango.screens.OnboardingScreen
 import com.example.urbango.screens.ReportScreen
@@ -83,6 +84,9 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
             ReportScreen(
                 navController = navController,
             )
+        }
+        composable("crowdsourced"){
+            CrowdedScreen(navController)
         }
     }
 }

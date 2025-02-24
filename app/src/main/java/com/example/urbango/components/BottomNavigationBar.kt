@@ -1,11 +1,9 @@
 package com.example.urbango.components
 
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -15,17 +13,17 @@ import com.example.urbango.R
 
 sealed class BottomNavigationBar(val route: String, val title: String){
     sealed class BottomNavigationBarItem(val bRoute:String, val bTitle:String, val bIcon:Int): BottomNavigationBar(route = bRoute, title = bTitle){
-        object Home: BottomNavigationBarItem(bRoute = "home", bTitle = "Home", bIcon = R.drawable.baseline_home_24)
-        object Reports: BottomNavigationBarItem(bRoute = "reports", bTitle = "Reports", bIcon = R.drawable.baseline_report_24)
-        object Alerts: BottomNavigationBarItem(bRoute = "alerts", bTitle = "Alerts", bIcon = R.drawable.baseline_crisis_alert_24)
-        object Profile: BottomNavigationBarItem(bRoute = "profile", bTitle = "Profile", bIcon = R.drawable.baseline_person_24)
+        data object Home: BottomNavigationBarItem(bRoute = "home", bTitle = "Home", bIcon = R.drawable.baseline_home_24)
+        data object Reports: BottomNavigationBarItem(bRoute = "reports", bTitle = "Reports", bIcon = R.drawable.baseline_report_24)
+        data object Crowdsourced: BottomNavigationBarItem(bRoute = "crowdsourced", bTitle = "Crowdsourced", bIcon = R.drawable.baseline_view_timeline_24)
+        data object Profile: BottomNavigationBarItem(bRoute = "profile", bTitle = "Profile", bIcon = R.drawable.baseline_person_24)
     }
 }
 
 val listOfBottomItems = listOf(
     BottomNavigationBar.BottomNavigationBarItem.Home,
     BottomNavigationBar.BottomNavigationBarItem.Reports,
-    BottomNavigationBar.BottomNavigationBarItem.Alerts,
+    BottomNavigationBar.BottomNavigationBarItem.Crowdsourced,
     BottomNavigationBar.BottomNavigationBarItem.Profile
 )
 
