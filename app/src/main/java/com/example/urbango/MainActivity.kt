@@ -19,6 +19,7 @@ import com.example.urbango.screens.OnboardingScreen
 import com.example.urbango.screens.ReportScreen
 import com.example.urbango.screens.SignInScreen
 import com.example.urbango.screens.SignUpScreen
+import com.example.urbango.screens.SuggestedRouteScreen
 import com.example.urbango.ui.theme.UrbanGoTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -78,7 +79,10 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
             )
         }
         composable("home"){
-            HomeScreen(navController)
+            HomeScreen(navController,
+                onNavigateToSuggestedRoute = {
+                    navController.navigate("suggestedroute")
+                })
         }
         composable("reports") {
             ReportScreen(
@@ -87,6 +91,9 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
         }
         composable("crowdsourced"){
             CrowdedScreen(navController)
+        }
+        composable("suggestedroute"){
+            SuggestedRouteScreen()
         }
     }
 }

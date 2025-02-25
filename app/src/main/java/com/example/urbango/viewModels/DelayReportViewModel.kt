@@ -3,11 +3,13 @@ package com.example.urbango.viewModels
 import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,6 +25,18 @@ class DelayReportViewModel : ViewModel() {
 
     private val _delayReports = MutableStateFlow<List<DelayReport>>(emptyList())
     val delayReports: StateFlow<List<DelayReport>> = _delayReports
+    init {
+        startAutoRefresh()
+    }
+
+    private fun startAutoRefresh() {
+        viewModelScope.launch {
+            while (true) {
+                fetchDelayReports()
+                delay(1000) // Refresh every second
+            }
+        }
+    }
 
     fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String) {
         val user = auth.currentUser

@@ -328,7 +328,7 @@ fun CardView(
     cardItems: List<CardItem.CardItems>,
     modifier: Modifier = Modifier,
     cardColor: Color,
-    onCardClick: (String) -> Unit // Callback for updating selected title
+    onCardClick: (String) -> Unit
 ) {
     LazyRow(
         modifier = modifier
@@ -342,7 +342,7 @@ fun CardView(
                     .height(200.dp)
                     .width(200.dp),
                 onClick = {
-                    onCardClick(cardItem.title) // Pass selected card title
+                    onCardClick(cardItem.title)
                 },
                 elevation = CardDefaults.cardElevation(4.dp),
                 colors = CardDefaults.cardColors(cardColor)

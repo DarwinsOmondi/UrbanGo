@@ -124,15 +124,15 @@ fun DelayReportCard(
         ) {
             Text(
                 "Report by : ${report.userId}",
-                style = MaterialTheme.typography.bodyMedium)
+                style = MaterialTheme.typography.bodySmall)
             Text(
                 text = "Problem : ${report.problemReport}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodySmall
             )
-            areaName?.let { Text(text = "Area: $it") }
+            areaName?.let { Text(text = "Area: $it",style = MaterialTheme.typography.bodySmall) }
             Text(
                 text = "Accuracy: $accuracyPercentage%",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
