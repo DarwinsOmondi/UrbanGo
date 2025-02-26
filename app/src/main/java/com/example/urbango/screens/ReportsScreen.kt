@@ -60,6 +60,10 @@ fun ReportScreen(navController: NavHostController) {
     var showCamera by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val uploadState by reportViewModel.uploadState.collectAsState()
+    var selectedSeverityLevel by remember { mutableStateOf("") }
+    var outlineTextsFieldValue by remember { mutableStateOf("") }
+    val listOfSeverity = listOf("Low", "Medium", "High")
+    val dropdownExpanded = remember { mutableStateOf(false) }
 
 
     val cardColors = listOf(
@@ -98,8 +102,26 @@ fun ReportScreen(navController: NavHostController) {
                 cardItems = listOfCardItems,
                 modifier = Modifier.height(100.dp),
                 cardColor = cardColor,
-                onCardClick = { title -> selectedCardTitle = title }
+                onCardClick = { title ->
+                    selectedCardTitle = title
+                    dropdownExpanded.value = true
+                }
             )
+            DropdownMenu(
+                expanded = dropdownExpanded.value,
+                onDismissRequest = { dropdownExpanded.value = false }
+            ) {
+                listOfSeverity.forEach { severity ->
+                    DropdownMenuItem(
+                        text = { Text(severity) },
+                        onClick = {
+                            selectedSeverityLevel = severity
+                            dropdownExpanded.value = false
+                        }
+                    )
+                }
+            }
+
 
             OutlinedTextField(
                 value = selectedCardTitle,
@@ -108,7 +130,7 @@ fun ReportScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = { showCamera = !showCamera }) {
-                        Icon(Icons.Default.Camera, contentDescription = "Add Image", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Camera, contentDescription = "Add Image", tint = Color(0xFF1976D2))
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -134,7 +156,7 @@ fun ReportScreen(navController: NavHostController) {
                 onClick = {
                     if (selectedGeoPoints.isNotEmpty()) {
                         val lastPoint = selectedGeoPoints.last()
-                        reportViewModel.saveDelayReport(lastPoint.latitude, lastPoint.longitude, selectedCardTitle)
+                        reportViewModel.saveDelayReport(lastPoint.latitude, lastPoint.longitude, selectedCardTitle,selectedSeverityLevel)
                     } else {
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Please select a location on the map.")
@@ -143,7 +165,8 @@ fun ReportScreen(navController: NavHostController) {
                     reportDetails = ""
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
             ) {
                 Icon(Icons.Default.Send, contentDescription = "Send Report")
                 Spacer(modifier = Modifier.width(8.dp))

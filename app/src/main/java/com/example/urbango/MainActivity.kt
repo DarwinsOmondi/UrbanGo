@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.urbango.screens.CrowdedScreen
 import com.example.urbango.screens.HomeScreen
 import com.example.urbango.screens.OnboardingScreen
+import com.example.urbango.screens.ProfileScreen
 import com.example.urbango.screens.ReportScreen
 import com.example.urbango.screens.SignInScreen
 import com.example.urbango.screens.SignUpScreen
@@ -94,6 +95,9 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
         }
         composable("suggestedroute"){
             SuggestedRouteScreen()
+        }
+        composable("profile"){
+            ProfileScreen(navController)
         }
     }
 }

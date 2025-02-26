@@ -38,7 +38,7 @@ class DelayReportViewModel : ViewModel() {
         }
     }
 
-    fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String) {
+    fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String,severity:String) {
         val user = auth.currentUser
         if (user == null) {
             _uploadState.value = UploadState.Error("User not authenticated")
@@ -52,6 +52,7 @@ class DelayReportViewModel : ViewModel() {
             "latitude" to latitude,
             "longitude" to longitude,
             "problemReport" to problemReport,
+            "severity" to severity,
             "timestamp" to System.currentTimeMillis()
         )
 
@@ -198,7 +199,7 @@ data class DelayReport(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val problemReport: String = "",
-    val severity: String = "", // Added severity field
+    val severity: String = "",
     val timestamp: Long = 0,
     val upvotes: Int = 0,
     val downvotes: Int = 0,

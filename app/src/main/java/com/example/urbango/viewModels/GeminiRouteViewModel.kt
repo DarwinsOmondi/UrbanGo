@@ -27,20 +27,20 @@ class GeminiRouteViewModel : ViewModel() {
     )
 
     fun suggestRoute(
-        locationOfDelay: Pair<Float, Float>,
-        desiredDestination: Pair<Float, Float>,
-        startingLocation: Pair<Float, Float>
+        locationOfDelay: List<DelayReport>,
+        desiredDestination:String,
+        startingLocation:String
     ) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
             try {
                 val query = """
-                    Provide alternative routes to ${desiredDestination.first}, ${desiredDestination.second} 
-                    from ${startingLocation.first}, ${startingLocation.second}, when there is a traffic delay 
-                    at ${locationOfDelay.first}, ${locationOfDelay.second} 
-                """.trimIndent()
-
+    Suggest the best alternative route to reach $desiredDestination from $startingLocation, 
+    avoiding traffic delays at these points: $locationOfDelay. 
+    Explain the recommended route clearly, mentioning key roads and turns, 
+    but keep the response focused only on the directions.
+""".trimIndent()
                 val response = model.generateContent(query)
                 println(response.text)
 

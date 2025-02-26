@@ -130,6 +130,11 @@ fun DelayReportCard(
                 style = MaterialTheme.typography.bodySmall
             )
             areaName?.let { Text(text = "Area: $it",style = MaterialTheme.typography.bodySmall) }
+
+            Text(
+                text = "severity: ${report.severity}",
+                style = MaterialTheme.typography.bodySmall,
+            )
             Text(
                 text = "Accuracy: $accuracyPercentage%",
                 style = MaterialTheme.typography.bodySmall,
@@ -143,15 +148,17 @@ fun DelayReportCard(
                     Icon(
                         imageVector = Icons.Default.ThumbUp,
                         contentDescription = "Upvote",
-                        tint = if (userVote == "upvote") Color.Green else Color.Gray
+                        tint = if (userVote == "upvote") Color.Green else Color.Gray,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(text = "${report.upvotes}")
                 IconButton(onClick = onDownvote) {
                     Icon(
                         imageVector = Icons.Default.ThumbDown,
-                        contentDescription = "Downvote",
-                        tint = if (userVote == "downvote") Color.Red else Color.Gray
+                        contentDescription = "Down vote",
+                        tint = if (userVote == "downvote") Color.Red else Color.Gray,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(text = "${report.downvotes}")
