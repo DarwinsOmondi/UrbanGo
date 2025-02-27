@@ -25,6 +25,7 @@ class DelayReportViewModel : ViewModel() {
 
     private val _delayReports = MutableStateFlow<List<DelayReport>>(emptyList())
     val delayReports: StateFlow<List<DelayReport>> = _delayReports
+
     init {
         startAutoRefresh()
     }
@@ -38,7 +39,7 @@ class DelayReportViewModel : ViewModel() {
         }
     }
 
-    fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String,severity:String) {
+    fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String, severity: String) {
         val user = auth.currentUser
         if (user == null) {
             _uploadState.value = UploadState.Error("User not authenticated")
@@ -58,6 +59,15 @@ class DelayReportViewModel : ViewModel() {
 
         db.collection("delays").add(reportData)
             .addOnSuccessListener {
+                // Ensure the user document exists and initialize points if necessary
+                val userRef = db.collection("users").document(user.uid)
+                userRef.get().addOnSuccessListener { document ->
+                    if (!document.exists()) {
+                        userRef.set(hashMapOf("points" to 10))
+                    } else {
+                        userRef.update("points", FieldValue.increment(10))
+                    }
+                }
                 _uploadState.value = UploadState.Success
             }
             .addOnFailureListener { e ->
@@ -101,6 +111,7 @@ class DelayReportViewModel : ViewModel() {
         db.collection("delays").document(reportId).get()
             .addOnSuccessListener { document ->
                 val votedUsers = document.get("votedUsers") as? Map<String, String> ?: emptyMap()
+                val reportOwnerId = document.getString("userId") ?: return@addOnSuccessListener
 
                 when (votedUsers[userId]) {
                     "upvote" -> {
@@ -108,6 +119,7 @@ class DelayReportViewModel : ViewModel() {
                             "upvotes", FieldValue.increment(-1),
                             "votedUsers.$userId", FieldValue.delete()
                         )
+                        db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(-5))
                     }
                     "downvote" -> {
                         db.collection("delays").document(reportId).update(
@@ -115,12 +127,26 @@ class DelayReportViewModel : ViewModel() {
                             "upvotes", FieldValue.increment(1),
                             "votedUsers.$userId", "upvote"
                         )
+                        db.collection("users").document(reportOwnerId).get().addOnSuccessListener { userDoc ->
+                            if (!userDoc.exists()) {
+                                db.collection("users").document(reportOwnerId).set(hashMapOf("points" to 10))
+                            } else {
+                                db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(10))
+                            }
+                        }
                     }
                     else -> {
                         db.collection("delays").document(reportId).update(
                             "upvotes", FieldValue.increment(1),
                             "votedUsers.$userId", "upvote"
                         )
+                        db.collection("users").document(reportOwnerId).get().addOnSuccessListener { userDoc ->
+                            if (!userDoc.exists()) {
+                                db.collection("users").document(reportOwnerId).set(hashMapOf("points" to 5))
+                            } else {
+                                db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(5))
+                            }
+                        }
                     }
                 }
             }

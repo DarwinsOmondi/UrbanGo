@@ -99,6 +99,9 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
         composable("profile"){
             ProfileScreen(navController)
         }
+        composable("profile"){
+            ProfileScreen(navController)
+        }
     }
 }
 

@@ -1,9 +1,8 @@
 package com.example.urbango.screens
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.widget.Toast
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,8 +15,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.viewModels.DelayReport
 import com.example.urbango.viewModels.DelayReportViewModel
@@ -238,6 +239,11 @@ fun OSMDroidMapView(
                     true
                 }
             }
+            when (report.severity) {
+                "Low" -> marker.icon = createMarkerWithColor(context, Color.GREEN)
+                "Medium" -> marker.icon = createMarkerWithColor(context, Color.YELLOW)
+                "High" -> marker.icon = createMarkerWithColor(context, Color.RED)
+            }
             mapView.overlays.add(marker)
         }
 
@@ -251,11 +257,17 @@ fun OSMDroidMapView(
     AndroidView(
         factory = { mapView.apply {
             setTileSource(TileSourceFactory.MAPNIK)
-            controller.setZoom(14.0)
+            controller.setZoom(17.0)
             setMultiTouchControls(true)
         } },
         modifier = modifier
     )
+}
+
+fun createMarkerWithColor(context: Context,color:Int): Drawable {
+    val drawable = ContextCompat.getDrawable(context, R.drawable.baseline_location_pin_24)!!
+    drawable.setTint(color)
+    return drawable
 }
 
 fun calculateAccuracyPercentage(upvotes: Int, downvotes: Int): Int {
