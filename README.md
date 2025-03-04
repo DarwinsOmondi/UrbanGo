@@ -20,7 +20,7 @@
 
 - **Frontend:** Jetpack Compose (Android)
 - **Database:** Firebase for real-time updates
-- **Mapping:** Google Maps API / OpenStreetMap for location tracking
+- **Mapping:** OpenStreetMap for location tracking
 
 ## Why UrbanGo? 🌍
 
