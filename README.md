@@ -47,7 +47,7 @@ We welcome contributions! Feel free to submit pull requests, report issues, or s
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ##sample screenshot of the app screens
-![Screenshot (21)](https://github.com/user-attachments/assets/4de0cfd0-16ef-4f74-b6f4-e0219cdbce75)
+![Screenshot (32)](https://github.com/user-attachments/assets/cb55daf0-9ddd-4b9b-b697-4103953b9ea8)
 ---
 
 🚀 **UrbanGo - Making Public Transport Smarter, One Ride at a Time!**
