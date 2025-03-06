@@ -97,7 +97,6 @@ fun ProfileHeader(auth: FirebaseAuth) {
     val db = FirebaseFirestore.getInstance()
     val userId = auth.currentUser?.uid
 
-    // Attach listener only if the user is logged in
     LaunchedEffect(userId) {
         if (userId != null) {
             val userRef = db.collection("users").document(userId)
@@ -178,7 +177,7 @@ fun ProfileOptions(
             HorizontalDivider()
             ProfileOption(Icons.AutoMirrored.Filled.ExitToApp, "Log Out") {
                 auth.signOut()
-                onSignOut() // Navigate immediately
+                onSignOut()
             }
         }
     }
