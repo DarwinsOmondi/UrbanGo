@@ -257,7 +257,7 @@ fun OSMDroidMapView(
     AndroidView(
         factory = { mapView.apply {
             setTileSource(TileSourceFactory.MAPNIK)
-            controller.setZoom(20.0)
+            controller.setZoom(17.0)
             setMultiTouchControls(true)
         } },
         modifier = modifier
