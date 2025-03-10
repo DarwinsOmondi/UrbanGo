@@ -391,7 +391,8 @@ sealed class CardItem(val title: String) {
         data object Card3 : CardItems("\uD83D\uDE8D Overcrowding")
         data object Card4 : CardItems("❌ Cancellation")
         data object Card5 : CardItems("\uD83D\uDEA6 Traffic Jam")
-        data object Card6 : CardItems("\uD83D\uDED1 Other ")
+        data object Card6 : CardItems("☀\uFE0F Weather")
+        data object Card7 : CardItems("\uD83D\uDED1 Other ")
     }
 }
 
@@ -402,4 +403,5 @@ val listOfCardItems = listOf(
     CardItem.CardItems.Card4,
     CardItem.CardItems.Card5,
     CardItem.CardItems.Card6,
+    CardItem.CardItems.Card7,
 )

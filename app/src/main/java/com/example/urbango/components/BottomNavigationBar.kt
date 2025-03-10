@@ -4,12 +4,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRailItemColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import com.example.urbango.R
+import kotlin.io.encoding.Base64
+import kotlin.random.Random
 
 sealed class BottomNavigationBar(val route: String, val title: String){
     sealed class BottomNavigationBarItem(val bRoute:String, val bTitle:String, val bIcon:Int): BottomNavigationBar(route = bRoute, title = bTitle){
@@ -53,7 +57,7 @@ fun BottomNavigationBar(navController: NavHostController){
                         contentDescription = screen.bTitle,
                         tint =
                             if (currentRoute == screen.bRoute){
-                                MaterialTheme.colorScheme.primary
+                                Color(0xFF1976D2)
                             }else{
                                 MaterialTheme.colorScheme.onBackground
                             }
