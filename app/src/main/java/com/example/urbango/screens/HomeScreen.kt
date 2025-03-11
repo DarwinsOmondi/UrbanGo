@@ -29,7 +29,6 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +38,6 @@ fun HomeScreen(
     onNavigateToSuggestedRoute: () -> Unit,
     locationViewModel: PermissionViewModel = viewModel(),
     delayReportViewModel: DelayReportViewModel = viewModel(),
-    geminiRouteViewModel: GeminiRouteViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
@@ -88,9 +86,7 @@ fun HomeScreen(
 
     if (routeSuggestionDialogVisible) {
         RouteSuggestionDialog(
-            delayReports = delayReports,
             onDismiss = { routeSuggestionDialogVisible = false },
-            geminiRouteViewModel = geminiRouteViewModel,
             onNavigateToSuggestedRoute = { onNavigateToSuggestedRoute() }
         )
     }
@@ -143,9 +139,7 @@ fun ReportDetailsDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteSuggestionDialog(
-    delayReports: List<DelayReport>,
     onDismiss: () -> Unit,
-    geminiRouteViewModel: GeminiRouteViewModel,
     onNavigateToSuggestedRoute: () -> Unit,
 ) {
     var startingLocation by remember { mutableStateOf("") }
@@ -213,7 +207,6 @@ fun OSMDroidMapView(
     onMarkerClick: (DelayReport) -> Unit
 ) {
     val mapView = remember { MapView(context) }
-    val polyline = remember { Polyline().apply { color = Color.RED; width = 5.0f } }
 
     LaunchedEffect(delayReports) {
         mapView.overlays.clear()
@@ -246,11 +239,6 @@ fun OSMDroidMapView(
             }
             mapView.overlays.add(marker)
         }
-
-        if (!mapView.overlays.contains(polyline)) {
-            mapView.overlays.add(polyline)
-        }
-
         mapView.invalidate()
     }
 

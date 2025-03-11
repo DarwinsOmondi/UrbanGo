@@ -63,7 +63,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.osmdroid.android) // OSMDroid SDK
+    implementation(libs.osmdroid.android)
     implementation ("org.osmdroid:osmdroid-android:6.1.14")
     implementation(libs.coil.compose)
     implementation(libs.androidx.camera.core)

@@ -42,12 +42,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
     val imageUriState = remember { mutableStateOf<Uri?>(null) }
-    val startDestination :String
 
-    if (auth.currentUser != null){
-        startDestination = "home"
+    val startDestination :String = if (auth.currentUser != null){
+        "home"
     }else{
-        startDestination = "onboarding"
+        "onboarding"
     }
     NavHost(navController = navController, startDestination = startDestination){
         composable("onboarding"){
