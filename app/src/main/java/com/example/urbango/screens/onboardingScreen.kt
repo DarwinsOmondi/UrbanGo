@@ -103,7 +103,7 @@ fun OnboardingScreen(
                     }
                     Spacer(Modifier.weight(1f))
                     Button(
-                        onClick = { onNavigateToSignUP()},
+                        onClick = { onNavigateToSignUP() },
                         modifier = Modifier
                             .padding(16.dp),
                         shape = RoundedCornerShape(12.dp),

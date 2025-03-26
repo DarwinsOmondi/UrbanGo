@@ -49,7 +49,6 @@ fun SuggestedRouteScreen() {
     var speechText by remember { mutableStateOf("No route available.") }
     val textToSpeech = rememberTextToSpeech(context)
 
-    // Update speechText safely when routeResults changes
     LaunchedEffect(routeResults) {
         speechText = routeResults ?: "No route available."
     }
@@ -103,7 +102,10 @@ fun SuggestedRouteScreen() {
 
             // Loading Indicator
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.padding(16.dp), color = Color(0xFF1976D2))
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(16.dp),
+                    color = Color(0xFF1976D2)
+                )
             }
 
             // Error Message
@@ -256,7 +258,6 @@ fun OSMDroidMapView(
 }
 
 
-
 @Composable
 fun rememberTextToSpeech(context: Context): TextToSpeech? {
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
@@ -266,7 +267,8 @@ fun rememberTextToSpeech(context: Context): TextToSpeech? {
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech?.language = Locale.getDefault()
             } else {
-                Toast.makeText(context, "TextToSpeech initialization failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "TextToSpeech initialization failed", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
         textToSpeech = tts

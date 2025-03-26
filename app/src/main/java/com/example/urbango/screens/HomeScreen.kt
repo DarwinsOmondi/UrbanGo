@@ -54,30 +54,43 @@ fun HomeScreen(
     Configuration.getInstance().userAgentValue = context.packageName
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Home", style = MaterialTheme.typography.titleMedium) }) },
+        topBar = {
+            TopAppBar(title = {
+                Text(
+                    "Home",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            })
+        },
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                onNavigateToSuggestedRoute()
-               },
+                    onNavigateToSuggestedRoute()
+                },
                 shape = RoundedCornerShape(16.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
+            ) {
                 Icon(Icons.Default.Directions, contentDescription = "Suggest Route")
             }
         }
     ) { paddingValues ->
         OSMDroidMapView(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             context = context,
             locationPermissionGranted = locationPermissionGranted,
             locationViewModel = locationViewModel,
             delayReports = delayReports,
             onMarkerClick = { report ->
                 selectedReport = report
-                delayReportViewModel.fetchAreaName(context, report.latitude, report.longitude) { name ->
+                delayReportViewModel.fetchAreaName(
+                    context,
+                    report.latitude,
+                    report.longitude
+                ) { name ->
                     areaName = name
                 }
             }
@@ -154,7 +167,9 @@ fun RouteSuggestionDialog(
                     value = startingLocation,
                     onValueChange = { startingLocation = it },
                     label = { Text("Starting Location") },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = androidx.compose.ui.graphics.Color.Black,
@@ -169,7 +184,9 @@ fun RouteSuggestionDialog(
                     value = desiredDestination,
                     onValueChange = { desiredDestination = it },
                     label = { Text("Destination Location") },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = androidx.compose.ui.graphics.Color.Black,
@@ -243,16 +260,18 @@ fun OSMDroidMapView(
     }
 
     AndroidView(
-        factory = { mapView.apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            controller.setZoom(17.0)
-            setMultiTouchControls(true)
-        } },
+        factory = {
+            mapView.apply {
+                setTileSource(TileSourceFactory.MAPNIK)
+                controller.setZoom(17.0)
+                setMultiTouchControls(true)
+            }
+        },
         modifier = modifier
     )
 }
 
-fun createMarkerWithColor(context: Context,color:Int): Drawable {
+fun createMarkerWithColor(context: Context, color: Int): Drawable {
     val drawable = ContextCompat.getDrawable(context, R.drawable.baseline_location_pin_24)!!
     drawable.setTint(color)
     return drawable

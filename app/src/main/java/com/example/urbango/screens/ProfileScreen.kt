@@ -133,7 +133,11 @@ fun ProfileHeader(auth: FirebaseAuth) {
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = userName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
         Text(text = userEmail, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Text(

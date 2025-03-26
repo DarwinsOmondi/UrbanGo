@@ -82,7 +82,14 @@ fun ReportScreen(navController: NavHostController) {
     var selectedCardTitle by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Report", style = MaterialTheme.typography.headlineSmall) }) },
+        topBar = {
+            TopAppBar(title = {
+                Text(
+                    "Report",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            })
+        },
         bottomBar = { BottomNavigationBar(navController) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -92,7 +99,8 @@ fun ReportScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text("Help other commuters by reporting delays, overcrowding, or incidents in real time.",
+            Text(
+                "Help other commuters by reporting delays, overcrowding, or incidents in real time.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )
@@ -130,7 +138,11 @@ fun ReportScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = { showCamera = !showCamera }) {
-                        Icon(Icons.Default.Camera, contentDescription = "Add Image", tint = Color(0xFF1976D2))
+                        Icon(
+                            Icons.Default.Camera,
+                            contentDescription = "Add Image",
+                            tint = Color(0xFF1976D2)
+                        )
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -156,7 +168,12 @@ fun ReportScreen(navController: NavHostController) {
                 onClick = {
                     if (selectedGeoPoints.isNotEmpty()) {
                         val lastPoint = selectedGeoPoints.last()
-                        reportViewModel.saveDelayReport(lastPoint.latitude, lastPoint.longitude, selectedCardTitle,selectedSeverityLevel)
+                        reportViewModel.saveDelayReport(
+                            lastPoint.latitude,
+                            lastPoint.longitude,
+                            selectedCardTitle,
+                            selectedSeverityLevel
+                        )
                     } else {
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Please select a location on the map.")
@@ -189,14 +206,21 @@ fun ReportScreen(navController: NavHostController) {
                             controller.setZoom(15.0)
                             setMultiTouchControls(true)
 
-                            val locationOverlay = MyLocationNewOverlay(this).apply { enableMyLocation() }
+                            val locationOverlay =
+                                MyLocationNewOverlay(this).apply { enableMyLocation() }
                             overlays.add(locationOverlay)
                             if (locationPermissionGranted) locationOverlay.enableFollowLocation()
 
                             val mapEventsOverlay = object : org.osmdroid.views.overlay.Overlay() {
-                                override fun onSingleTapConfirmed(e: MotionEvent?, mapView: MapView?): Boolean {
+                                override fun onSingleTapConfirmed(
+                                    e: MotionEvent?,
+                                    mapView: MapView?
+                                ): Boolean {
                                     e?.let { event ->
-                                        val geoPoint = mapView?.projection?.fromPixels(event.x.toInt(), event.y.toInt())
+                                        val geoPoint = mapView?.projection?.fromPixels(
+                                            event.x.toInt(),
+                                            event.y.toInt()
+                                        )
                                         geoPoint?.let {
                                             selectedGeoPoints.add(it as GeoPoint)
                                             mapView.invalidate()
@@ -320,15 +344,18 @@ fun CameraCard(onImageCaptured: (Uri) -> Unit, onClose: () -> Unit) {
                 onClick = {
                     val photoFile = File(context.cacheDir, "captured_image.jpg")
                     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-                    imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                            onImageCaptured(Uri.fromFile(photoFile))
-                        }
+                    imageCapture.takePicture(
+                        outputOptions,
+                        executor,
+                        object : ImageCapture.OnImageSavedCallback {
+                            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                                onImageCaptured(Uri.fromFile(photoFile))
+                            }
 
-                        override fun onError(exception: ImageCaptureException) {
-                            exception.printStackTrace()
-                        }
-                    })
+                            override fun onError(exception: ImageCaptureException) {
+                                exception.printStackTrace()
+                            }
+                        })
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

@@ -28,8 +28,8 @@ class GeminiRouteViewModel : ViewModel() {
 
     fun suggestRoute(
         locationOfDelay: List<DelayReport>,
-        desiredDestination:String,
-        startingLocation:String
+        desiredDestination: String,
+        startingLocation: String
     ) {
         viewModelScope.launch {
             isLoading.value = true

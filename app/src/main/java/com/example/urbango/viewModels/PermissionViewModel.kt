@@ -40,19 +40,21 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
-class PermissionViewModel():ViewModel() {
-     fun checkLocationPermission(context: Context):Boolean{
+class PermissionViewModel() : ViewModel() {
+    fun checkLocationPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-     fun requestLocationPermission(context: Context){
+    fun requestLocationPermission(context: Context) {
         if (ActivityCompat.shouldShowRequestPermissionRationale(
                 context as Activity, Manifest.permission.ACCESS_FINE_LOCATION
-        )){
-           Toast.makeText(context, "Location permission is required for map", Toast.LENGTH_SHORT).show()
-        }else{
+            )
+        ) {
+            Toast.makeText(context, "Location permission is required for map", Toast.LENGTH_SHORT)
+                .show()
+        } else {
             ActivityCompat.requestPermissions(
                 context,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -60,6 +62,7 @@ class PermissionViewModel():ViewModel() {
             )
         }
     }
+
     private val _hasCameraPermission = MutableStateFlow(false)
     val hasCameraPermission: StateFlow<Boolean> get() = _hasCameraPermission
 

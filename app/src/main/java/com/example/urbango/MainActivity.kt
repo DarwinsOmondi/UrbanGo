@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val auth = FirebaseAuth.getInstance()
             UrbanGoTheme {
-                UrbanGoApp(navController,auth)
+                UrbanGoApp(navController, auth)
             }
         }
     }
@@ -40,23 +40,23 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
+fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth) {
     val imageUriState = remember { mutableStateOf<Uri?>(null) }
 
-    val startDestination :String = if (auth.currentUser != null){
+    val startDestination: String = if (auth.currentUser != null) {
         "home"
-    }else{
+    } else {
         "onboarding"
     }
-    NavHost(navController = navController, startDestination = startDestination){
-        composable("onboarding"){
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable("onboarding") {
             OnboardingScreen(
                 onNavigateToSignUP = {
                     navController.navigate("signup")
                 }
             )
         }
-        composable("signup"){
+        composable("signup") {
             SignUpScreen(
                 onNavigateToLogin = {
                     navController.navigate("signin")
@@ -67,7 +67,7 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
                 auth = auth
             )
         }
-        composable("signin"){
+        composable("signin") {
             SignInScreen(
                 auth = auth,
                 onNavigateToSignUp = {
@@ -78,8 +78,9 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
                 }
             )
         }
-        composable("home"){
-            HomeScreen(navController,
+        composable("home") {
+            HomeScreen(
+                navController,
                 onNavigateToSuggestedRoute = {
                     navController.navigate("suggestedroute")
                 })
@@ -89,16 +90,16 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
                 navController = navController,
             )
         }
-        composable("crowdsourced"){
+        composable("crowdsourced") {
             CrowdedScreen(navController)
         }
-        composable("suggestedroute"){
+        composable("suggestedroute") {
             SuggestedRouteScreen()
         }
-        composable("profile"){
+        composable("profile") {
             ProfileScreen(navController)
         }
-        composable("profile"){
+        composable("profile") {
             ProfileScreen(navController)
         }
     }
@@ -106,7 +107,7 @@ fun UrbanGoApp(navController: NavHostController,auth: FirebaseAuth){
 
 @Preview(showBackground = true)
 @Composable
-fun UrbanGoAppPreview(){
+fun UrbanGoAppPreview() {
     UrbanGoTheme {
         val navController = rememberNavController()
         UrbanGoApp(

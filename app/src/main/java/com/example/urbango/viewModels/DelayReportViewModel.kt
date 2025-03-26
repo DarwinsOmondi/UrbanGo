@@ -39,7 +39,12 @@ class DelayReportViewModel : ViewModel() {
         }
     }
 
-    fun saveDelayReport(latitude: Double, longitude: Double, problemReport: String, severity: String) {
+    fun saveDelayReport(
+        latitude: Double,
+        longitude: Double,
+        problemReport: String,
+        severity: String
+    ) {
         val user = auth.currentUser
         if (user == null) {
             _uploadState.value = UploadState.Error("User not authenticated")
@@ -79,7 +84,8 @@ class DelayReportViewModel : ViewModel() {
         db.collection("delays")
             .addSnapshotListener { snapshots, e ->
                 if (e != null) {
-                    _uploadState.value = UploadState.Error("Failed to listen for updates: ${e.message}")
+                    _uploadState.value =
+                        UploadState.Error("Failed to listen for updates: ${e.message}")
                     return@addSnapshotListener
                 }
 
@@ -119,34 +125,43 @@ class DelayReportViewModel : ViewModel() {
                             "upvotes", FieldValue.increment(-1),
                             "votedUsers.$userId", FieldValue.delete()
                         )
-                        db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(-5))
+                        db.collection("users").document(reportOwnerId)
+                            .update("points", FieldValue.increment(-5))
                     }
+
                     "downvote" -> {
                         db.collection("delays").document(reportId).update(
                             "downvotes", FieldValue.increment(-1),
                             "upvotes", FieldValue.increment(1),
                             "votedUsers.$userId", "upvote"
                         )
-                        db.collection("users").document(reportOwnerId).get().addOnSuccessListener { userDoc ->
-                            if (!userDoc.exists()) {
-                                db.collection("users").document(reportOwnerId).set(hashMapOf("points" to 10))
-                            } else {
-                                db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(10))
+                        db.collection("users").document(reportOwnerId).get()
+                            .addOnSuccessListener { userDoc ->
+                                if (!userDoc.exists()) {
+                                    db.collection("users").document(reportOwnerId)
+                                        .set(hashMapOf("points" to 10))
+                                } else {
+                                    db.collection("users").document(reportOwnerId)
+                                        .update("points", FieldValue.increment(10))
+                                }
                             }
-                        }
                     }
+
                     else -> {
                         db.collection("delays").document(reportId).update(
                             "upvotes", FieldValue.increment(1),
                             "votedUsers.$userId", "upvote"
                         )
-                        db.collection("users").document(reportOwnerId).get().addOnSuccessListener { userDoc ->
-                            if (!userDoc.exists()) {
-                                db.collection("users").document(reportOwnerId).set(hashMapOf("points" to 5))
-                            } else {
-                                db.collection("users").document(reportOwnerId).update("points", FieldValue.increment(5))
+                        db.collection("users").document(reportOwnerId).get()
+                            .addOnSuccessListener { userDoc ->
+                                if (!userDoc.exists()) {
+                                    db.collection("users").document(reportOwnerId)
+                                        .set(hashMapOf("points" to 5))
+                                } else {
+                                    db.collection("users").document(reportOwnerId)
+                                        .update("points", FieldValue.increment(5))
+                                }
                             }
-                        }
                     }
                 }
             }
@@ -167,6 +182,7 @@ class DelayReportViewModel : ViewModel() {
                             "votedUsers.$userId", FieldValue.delete()
                         )
                     }
+
                     "upvote" -> {
                         db.collection("delays").document(reportId).update(
                             "upvotes", FieldValue.increment(-1),
@@ -174,6 +190,7 @@ class DelayReportViewModel : ViewModel() {
                             "votedUsers.$userId", "downvote"
                         )
                     }
+
                     else -> {
                         db.collection("delays").document(reportId).update(
                             "downvotes", FieldValue.increment(1),
@@ -184,13 +201,20 @@ class DelayReportViewModel : ViewModel() {
             }
     }
 
-    fun fetchAreaName(context: Context, latitude: Double, longitude: Double, onResult: (String?) -> Unit) {
+    fun fetchAreaName(
+        context: Context,
+        latitude: Double,
+        longitude: Double,
+        onResult: (String?) -> Unit
+    ) {
         val geocoder = Geocoder(context, Locale.getDefault())
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                val area = addresses?.firstOrNull()?.locality ?: addresses?.firstOrNull()?.subLocality ?: "Unknown Area"
+                val area =
+                    addresses?.firstOrNull()?.locality ?: addresses?.firstOrNull()?.subLocality
+                    ?: "Unknown Area"
                 withContext(Dispatchers.Main) {
                     onResult(area)
                 }

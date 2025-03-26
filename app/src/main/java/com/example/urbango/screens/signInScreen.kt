@@ -52,7 +52,11 @@ import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignInSuccess: () -> Unit = {}){
+fun SignInScreen(
+    auth: FirebaseAuth,
+    onNavigateToSignUp: () -> Unit = {},
+    onSignInSuccess: () -> Unit = {}
+) {
     val scope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -60,9 +64,9 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    Scaffold (
+    Scaffold(
         Modifier.background(Color(0xFFFFFFFF))
-    ){ paddingValue ->
+    ) { paddingValue ->
         Box(
             Modifier
                 .fillMaxSize()
@@ -70,15 +74,17 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
         ) {
             Column(
                 Modifier.fillMaxWidth()
-            ){
-                Box (
+            ) {
+                Box(
                     Modifier.fillMaxWidth()
-                ){
-                    Row (
-                        Modifier.align(Alignment.TopEnd)
+                ) {
+                    Row(
+                        Modifier
+                            .align(Alignment.TopEnd)
                             .padding(8.dp)
-                    ){
-                        Text("Don't have an account ?",
+                    ) {
+                        Text(
+                            "Don't have an account ?",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -102,16 +108,18 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
                         painter = painterResource(R.drawable.signinimage),
                         contentDescription = null,
                         modifier =
-                            Modifier.fillMaxWidth()
+                            Modifier
+                                .fillMaxWidth()
                                 .fillMaxHeight(0.5f),
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = email,
-                    onValueChange = {email = it},
+                    onValueChange = { email = it },
                     label = {
-                        Text("Email",
+                        Text(
+                            "Email",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -120,12 +128,13 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
                             modifier = Modifier.align(Alignment.Start)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = Color.DarkGray,
                         unfocusedBorderColor = Color.Black
                     ),
@@ -134,9 +143,10 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = {password = it},
+                    onValueChange = { password = it },
                     label = {
-                        Text("Password",
+                        Text(
+                            "Password",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -145,13 +155,14 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
                             modifier = Modifier.align(Alignment.Start)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = Color.DarkGray,
                         unfocusedBorderColor = Color.Black
                     ),
@@ -170,10 +181,10 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
                     onClick = {
                         scope.launch {
                             isLoading = true
-                            val results = signInUser(auth,email,password)
-                            if (results.isSuccess){
+                            val results = signInUser(auth, email, password)
+                            if (results.isSuccess) {
                                 onSignInSuccess()
-                            }else{
+                            } else {
                                 errorMessage = results.exceptionOrNull()?.message
                                 isLoading = false
                             }
@@ -186,13 +197,13 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
                 ) {
-                    if (isLoading){
+                    if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
-                    }else{
+                    } else {
                         Text(
                             "Sign In",
                             style = TextStyle(
@@ -208,22 +219,22 @@ fun SignInScreen(auth: FirebaseAuth,onNavigateToSignUp: () -> Unit = {}, onSignI
     }
 }
 
-private suspend fun signInUser(auth: FirebaseAuth, email: String, password: String):Result<Unit>{
+private suspend fun signInUser(auth: FirebaseAuth, email: String, password: String): Result<Unit> {
     return try {
-        if (email.isNotBlank() && password.isNotBlank()){
+        if (email.isNotBlank() && password.isNotBlank()) {
             auth.signInWithEmailAndPassword(email, password).await()
             Result.success(Unit)
-        }else{
+        } else {
             Result.failure(Exception("Email and password cannot be empty"))
         }
-        }catch (e:Exception){
-            Result.failure(e)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun SignInPreview(){
+fun SignInPreview() {
     SignInScreen(
         auth = FirebaseAuth.getInstance(),
         onNavigateToSignUp = {},

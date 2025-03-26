@@ -55,8 +55,8 @@ import kotlinx.coroutines.tasks.await
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit = {},
     onSignUpSuccess: () -> Unit = {},
-    auth:FirebaseAuth
-){
+    auth: FirebaseAuth
+) {
     val scope = rememberCoroutineScope()
     var userName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -69,21 +69,23 @@ fun SignUpScreen(
     Scaffold(
         Modifier.background(Color(0xFFFFFFFF))
     ) { paddingValues ->
-        Box (
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        ){
-            Column (
+        ) {
+            Column(
                 Modifier.fillMaxWidth()
-            ){
-                Box (modifier = Modifier.fillMaxWidth()){
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
 
-                    Row (
-                        Modifier.align(Alignment.TopEnd)
+                    Row(
+                        Modifier
+                            .align(Alignment.TopEnd)
                             .padding(16.dp)
-                    ){
-                        Text("Already have an account ?",
+                    ) {
+                        Text(
+                            "Already have an account ?",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -107,15 +109,17 @@ fun SignUpScreen(
                     painter = painterResource(R.drawable.signiupimage),
                     contentDescription = null,
                     modifier =
-                        Modifier.fillMaxWidth()
+                        Modifier
+                            .fillMaxWidth()
                             .fillMaxHeight(0.5f),
                     contentScale = ContentScale.Crop
                 )
                 OutlinedTextField(
                     value = userName,
-                    onValueChange = {userName = it},
+                    onValueChange = { userName = it },
                     label = {
-                        Text("Username",
+                        Text(
+                            "Username",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -124,12 +128,13 @@ fun SignUpScreen(
                             modifier = Modifier.align(Alignment.Start)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = Color.DarkGray,
                         unfocusedBorderColor = Color.Black
                     ),
@@ -138,9 +143,10 @@ fun SignUpScreen(
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = {email = it},
+                    onValueChange = { email = it },
                     label = {
-                        Text("Email",
+                        Text(
+                            "Email",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -149,12 +155,13 @@ fun SignUpScreen(
                             modifier = Modifier.align(Alignment.Start)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = Color.DarkGray,
                         unfocusedBorderColor = Color.Black
                     ),
@@ -163,9 +170,10 @@ fun SignUpScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = {password = it},
+                    onValueChange = { password = it },
                     label = {
-                        Text("Password",
+                        Text(
+                            "Password",
                             style = TextStyle(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
@@ -174,13 +182,14 @@ fun SignUpScreen(
                             modifier = Modifier.align(Alignment.Start)
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .padding(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor =Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedBorderColor = Color.DarkGray,
                         unfocusedBorderColor = Color.Black
                     ),
@@ -198,10 +207,10 @@ fun SignUpScreen(
                     onClick = {
                         scope.launch {
                             isLoading = true
-                            val results = signUpUser(auth,userName,email,password)
-                            if (results.isSuccess){
+                            val results = signUpUser(auth, userName, email, password)
+                            if (results.isSuccess) {
                                 onSignUpSuccess()
-                            }else{
+                            } else {
                                 errorMessage = results.exceptionOrNull()?.message
                                 isLoading = false
                             }
@@ -215,13 +224,13 @@ fun SignUpScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
                 ) {
-                    if (isLoading){
+                    if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
-                    }else{
+                    } else {
                         Text(
                             "Sign Up",
                             style = TextStyle(
@@ -237,15 +246,20 @@ fun SignUpScreen(
     }
 }
 
-private suspend fun signUpUser(auth:FirebaseAuth,userName:String,userEmail:String,userPassword:String) :Result<Unit> {
-  return  try {
-        if (userName.isNotEmpty() && userEmail.isNotEmpty() && userPassword.isNotEmpty()){
-            auth.createUserWithEmailAndPassword(userEmail,userPassword).await()
+private suspend fun signUpUser(
+    auth: FirebaseAuth,
+    userName: String,
+    userEmail: String,
+    userPassword: String
+): Result<Unit> {
+    return try {
+        if (userName.isNotEmpty() && userEmail.isNotEmpty() && userPassword.isNotEmpty()) {
+            auth.createUserWithEmailAndPassword(userEmail, userPassword).await()
             Result.success(Unit)
-        }else{
+        } else {
             Result.failure(Exception("Please fill every fields"))
         }
-    }catch (e:Exception){
+    } catch (e: Exception) {
         return Result.failure(e)
     }
 
@@ -253,7 +267,7 @@ private suspend fun signUpUser(auth:FirebaseAuth,userName:String,userEmail:Strin
 
 @Preview(showBackground = true)
 @Composable
-fun SignUpPreview(){
+fun SignUpPreview() {
     SignUpScreen(
         onNavigateToLogin = {},
         onSignUpSuccess = {},

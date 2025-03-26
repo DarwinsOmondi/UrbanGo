@@ -31,7 +31,6 @@ fun CrowdedScreen(navController: NavHostController) {
     val delayReports by viewModel.delayReports.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
-    // Fetch reports when the screen is loaded
     LaunchedEffect(Unit) {
         viewModel.fetchDelayReports()
     }
@@ -62,12 +61,13 @@ fun CrowdedScreen(navController: NavHostController) {
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 label = { Text("Search by Area Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(16.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedTextColor = Color.Black,
-                    unfocusedTextColor =Color.Black,
+                    unfocusedTextColor = Color.Black,
                     focusedBorderColor = Color.DarkGray,
                     unfocusedBorderColor = Color.Black
                 ),
@@ -104,11 +104,16 @@ fun DelayReportCard(
     var areaName by remember { mutableStateOf<String?>(null) }
     val delayReportViewModel: DelayReportViewModel = viewModel()
 
-    val accuracyPercentage = delayReportViewModel.calculateAccuracyPercentage(report.upvotes, report.downvotes)
+    val accuracyPercentage =
+        delayReportViewModel.calculateAccuracyPercentage(report.upvotes, report.downvotes)
 
 
 
-    delayReportViewModel.fetchAreaName(LocalContext.current, report.latitude, report.longitude) { name ->
+    delayReportViewModel.fetchAreaName(
+        LocalContext.current,
+        report.latitude,
+        report.longitude
+    ) { name ->
         areaName = name
     }
 
@@ -124,12 +129,13 @@ fun DelayReportCard(
         ) {
             Text(
                 "Report by : ${report.userId}",
-                style = MaterialTheme.typography.bodySmall)
+                style = MaterialTheme.typography.bodySmall
+            )
             Text(
                 text = "Problem : ${report.problemReport}",
                 style = MaterialTheme.typography.bodySmall
             )
-            areaName?.let { Text(text = "Area: $it",style = MaterialTheme.typography.bodySmall) }
+            areaName?.let { Text(text = "Area: $it", style = MaterialTheme.typography.bodySmall) }
 
             Text(
                 text = "severity: ${report.severity}",
