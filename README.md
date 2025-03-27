@@ -9,7 +9,6 @@
 ✅ **Delay Alerts:** Receive instant notifications about transport delays or cancellations.  
 ✅ **Route Optimization:** Find the fastest routes, including walking, biking, and ride-sharing options.  
 ✅ **Accessibility Features:** Highlights accessible routes for people with disabilities or those traveling with strollers.  
-
 ## Stretch Goals 🎯
 
 🔹 **AI Predictions:** Utilize machine learning to predict delays using historical and real-time data.  
