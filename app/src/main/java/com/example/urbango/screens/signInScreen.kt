@@ -46,7 +46,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.urbango.R
+import com.example.urbango.repository.SupabaseClient.client
 import com.google.firebase.auth.FirebaseAuth
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -182,6 +185,10 @@ fun SignInScreen(
                         scope.launch {
                             isLoading = true
                             val results = signInUser(auth, email, password)
+                            client.auth.signInWith(Email) {
+                                this.email = email
+                                this.password = password
+                            }
                             if (results.isSuccess) {
                                 onSignInSuccess()
                             } else {

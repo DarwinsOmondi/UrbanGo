@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.OnlinePrediction
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,10 +21,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.model.PredictionResult
+import com.example.urbango.model.TrafficData
 import com.example.urbango.viewModels.DelayReport
 import com.example.urbango.viewModels.DelayReportViewModel
-import com.example.urbango.viewModels.GeminiRouteViewModel
 import com.example.urbango.viewModels.PermissionViewModel
+import com.example.urbango.viewModels.PredictionViewModelML
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -38,15 +41,19 @@ fun HomeScreen(
     onNavigateToSuggestedRoute: () -> Unit,
     locationViewModel: PermissionViewModel = viewModel(),
     delayReportViewModel: DelayReportViewModel = viewModel(),
+    mlViewModelML: PredictionViewModelML = viewModel(),
 ) {
     val context = LocalContext.current
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
 
+
     LaunchedEffect(Unit) {
         delayReportViewModel.fetchDelayReports()
+        delayReportViewModel.fetchTrafficDelaysFromSupabase()
     }
 
     val delayReports by delayReportViewModel.delayReports.collectAsState()
+
     var selectedReport by remember { mutableStateOf<DelayReport?>(null) }
     var areaName by remember { mutableStateOf<String?>(null) }
     var routeSuggestionDialogVisible by remember { mutableStateOf(false) }
@@ -55,12 +62,25 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = {
-                Text(
-                    "Home",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            })
+            TopAppBar(
+                title = {
+                    Text(
+                        "Home",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary),
+                actions = {
+                    IconButton(onClick = {
+                        navController.navigate("predicteddelay")
+                    },
+                        Modifier.size(50.dp)
+                            .padding(8.dp)
+                        ) {
+                        Icon(Icons.Default.OnlinePrediction, contentDescription = "Predict Delay", tint = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            )
         },
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
@@ -93,6 +113,21 @@ fun HomeScreen(
                 ) { name ->
                     areaName = name
                 }
+                // Trigger prediction for the selected report
+                mlViewModelML.predictTrafficDelay(
+                    TrafficData(
+                        latitude = report.latitude,
+                        longitude = report.longitude,
+                        delayTitle = report.problemReport,
+                        severityLevel = when (report.severity) {
+                            "Low" -> 1
+                            "Medium" -> 3
+                            "High" -> 5
+                            else -> 3
+                        },
+                        weather = "Unknown"
+                    )
+                )
             }
         )
     }

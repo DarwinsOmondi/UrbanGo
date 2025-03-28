@@ -46,9 +46,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.urbango.R
+import com.example.urbango.repository.SupabaseClient.client
 import com.google.firebase.auth.FirebaseAuth
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -208,6 +213,13 @@ fun SignUpScreen(
                         scope.launch {
                             isLoading = true
                             val results = signUpUser(auth, userName, email, password)
+                            client.auth.signUpWith(Email){
+                                this.email = email
+                                this.password = password
+                                data = buildJsonObject {
+                                    put("name", JsonPrimitive(userName))
+                                }
+                            }
                             if (results.isSuccess) {
                                 onSignUpSuccess()
                             } else {

@@ -1,9 +1,11 @@
 package com.example.urbango.screens
 
 import android.net.Uri
+import android.os.Build
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -35,8 +37,12 @@ import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
+import com.example.urbango.viewModels.PredictionViewModelML
 import com.example.urbango.viewModels.UploadState
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.DayOfWeek
 import org.osmdroid.util.GeoPoint
 import java.io.File
 import java.util.concurrent.Executors
@@ -45,13 +51,17 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.time.ZoneId
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val locationViewModel: PermissionViewModel = viewModel()
     val reportViewModel: DelayReportViewModel = viewModel()
+    val mlViewModel: PredictionViewModelML = viewModel()
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
     var reportDetails by remember { mutableStateOf("") }
     val selectedGeoPoints = remember { mutableStateListOf<GeoPoint>() }
@@ -61,10 +71,17 @@ fun ReportScreen(navController: NavHostController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val uploadState by reportViewModel.uploadState.collectAsState()
     var selectedSeverityLevel by remember { mutableStateOf("") }
+    var selctedSeverityIntValue by remember { mutableStateOf(0) }
+    var selectedWeatherLevel by remember { mutableStateOf("") }
     var outlineTextsFieldValue by remember { mutableStateOf("") }
     val listOfSeverity = listOf("Low", "Medium", "High")
+    val listOfWeather =
+        listOf("Clear", "Light Rain", "Moderate Rain", "Heavy Rain", "Cloudy", "Foggy", "Snow")
     val dropdownExpanded = remember { mutableStateOf(false) }
-
+    val weatherDropdownExpanded = remember { mutableStateOf(false) }
+    val currentDateTime = LocalDateTime.now()
+    val dayOfWeek: DayOfWeek = currentDateTime.dayOfWeek
+    val timestamp = currentDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
@@ -97,7 +114,7 @@ fun ReportScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(8.dp)
         ) {
             Text(
                 "Help other commuters by reporting delays, overcrowding, or incidents in real time.",
@@ -124,7 +141,22 @@ fun ReportScreen(navController: NavHostController) {
                         text = { Text(severity) },
                         onClick = {
                             selectedSeverityLevel = severity
+                            weatherDropdownExpanded.value = true
                             dropdownExpanded.value = false
+                        }
+                    )
+                }
+            }
+            DropdownMenu(
+                expanded = weatherDropdownExpanded.value,
+                onDismissRequest = { weatherDropdownExpanded.value = false }
+            ) {
+                listOfWeather.forEach { weather ->
+                    DropdownMenuItem(
+                        text = { Text(weather) },
+                        onClick = {
+                            selectedWeatherLevel = weather
+                            weatherDropdownExpanded.value = false
                         }
                     )
                 }
@@ -166,17 +198,45 @@ fun ReportScreen(navController: NavHostController) {
 
             Button(
                 onClick = {
-                    if (selectedGeoPoints.isNotEmpty()) {
-                        val lastPoint = selectedGeoPoints.last()
-                        reportViewModel.saveDelayReport(
-                            lastPoint.latitude,
-                            lastPoint.longitude,
-                            selectedCardTitle,
-                            selectedSeverityLevel
-                        )
-                    } else {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Please select a location on the map.")
+                    scope.launch {
+                        if (selectedGeoPoints.isNotEmpty()) {
+                            val lastPoint = selectedGeoPoints.last()
+                            reportViewModel.saveDelayReport(
+                                lastPoint.latitude,
+                                lastPoint.longitude,
+                                selectedCardTitle,
+                                selectedSeverityLevel
+                            )
+                            selctedSeverityIntValue = when (selectedSeverityLevel) {
+                                "Low" -> {
+                                    1
+                                }
+
+                                "Medium" -> {
+                                    3
+                                }
+
+                                "High" -> {
+                                    5
+                                }
+
+                                else -> {
+                                    2
+                                }
+                            }
+
+                            reportViewModel.saveTrafficDelaysInSupabase(
+                                lastPoint.latitude,
+                                lastPoint.longitude,
+                                selectedCardTitle,
+                                selctedSeverityIntValue,
+                                selectedWeatherLevel,
+
+                                )
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Please select a location on the map.")
+                            }
                         }
                     }
                     reportDetails = ""
@@ -194,7 +254,7 @@ fun ReportScreen(navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(400.dp)
+                    .weight(0.5f)
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
             ) {
@@ -203,7 +263,7 @@ fun ReportScreen(navController: NavHostController) {
                         Configuration.getInstance().userAgentValue = ctx.packageName
                         MapView(ctx).apply {
                             setTileSource(TileSourceFactory.MAPNIK)
-                            controller.setZoom(15.0)
+                            controller.setZoom(22.0)
                             setMultiTouchControls(true)
 
                             val locationOverlay =
@@ -383,13 +443,12 @@ fun CardView(
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
     ) {
         items(cardItems) { cardItem ->
             Card(
                 modifier = Modifier
                     .padding(8.dp)
-                    .height(200.dp)
+                    .height(50.dp)
                     .width(200.dp),
                 onClick = {
                     onCardClick(cardItem.title)

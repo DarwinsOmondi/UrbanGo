@@ -35,7 +35,7 @@ val listOfBottomItems = listOf(
 fun BottomNavigationBar(navController: NavHostController){
     val currentRoute = navController.currentBackStackEntry?.destination?.route
     NavigationBar (
-
+        containerColor = MaterialTheme.colorScheme.primary
     ){
         listOfBottomItems.forEach { screen->
             NavigationBarItem(
@@ -57,7 +57,7 @@ fun BottomNavigationBar(navController: NavHostController){
                         contentDescription = screen.bTitle,
                         tint =
                             if (currentRoute == screen.bRoute){
-                                Color(0xFF1976D2)
+                                MaterialTheme.colorScheme.primary
                             }else{
                                 MaterialTheme.colorScheme.onBackground
                             }

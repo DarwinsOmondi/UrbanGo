@@ -12,16 +12,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = White,
-    secondary = LightGray,
-    tertiary = DarkGray,
+    primary = BluePrimary,
+    secondary = BlueSecondary,
+    tertiary = BlueTertiary,
     background = White,
-    surface = White,
+    surface = LightGray,
     onPrimary = Color.Black,
     onSecondary = Color.Black,
     onTertiary = Color.Black,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    onSurface = DarkGray
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -34,9 +34,8 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = White,
     onTertiary = White,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    onSurface = DarkGray
 )
-
 
 @Composable
 fun UrbanGoTheme(

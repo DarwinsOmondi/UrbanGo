@@ -2,11 +2,16 @@ package com.example.urbango.viewModels
 
 import android.content.Context
 import android.location.Geocoder
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.urbango.model.TrafficData
+import com.example.urbango.repository.SupabaseClient.client
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -14,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.util.Calendar
 import java.util.Locale
 
 class DelayReportViewModel : ViewModel() {
@@ -26,15 +33,20 @@ class DelayReportViewModel : ViewModel() {
     private val _delayReports = MutableStateFlow<List<DelayReport>>(emptyList())
     val delayReports: StateFlow<List<DelayReport>> = _delayReports
 
+    private val _trafficDelays = MutableStateFlow<List<TrafficData>>(emptyList())
+    val trafficDelays: StateFlow<List<TrafficData>> = _trafficDelays
+
     init {
         startAutoRefresh()
+        fetchDelayReports()
+        fetchTrafficDelaysFromSupabase()
     }
 
     private fun startAutoRefresh() {
         viewModelScope.launch {
             while (true) {
                 fetchDelayReports()
-                delay(1000) // Refresh every second
+                delay(1000)
             }
         }
     }
@@ -73,7 +85,7 @@ class DelayReportViewModel : ViewModel() {
                         userRef.update("points", FieldValue.increment(10))
                     }
                 }
-                _uploadState.value = UploadState.Success
+                _uploadState.value = UploadState.Success("Report saved successfully")
             }
             .addOnFailureListener { e ->
                 _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
@@ -102,7 +114,7 @@ class DelayReportViewModel : ViewModel() {
 
         db.collection("delays").document(reportId).delete()
             .addOnSuccessListener {
-                _uploadState.value = UploadState.Success
+                _uploadState.value = UploadState.Success("Report deleted successfully")
                 _delayReports.value = _delayReports.value.filterNot { it.documentId == reportId }
             }
             .addOnFailureListener { e ->
@@ -234,12 +246,65 @@ class DelayReportViewModel : ViewModel() {
             0
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveTrafficDelaysInSupabase(
+        latitude: Double,
+        longitude: Double,
+        delayTitle: String,
+        severity: Int,
+        weather: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val severityLevel = severity
+
+                client.postgrest["trafficdelay"].insert(
+                    TrafficData(
+                        latitude = latitude,
+                        longitude = longitude,
+                        delayTitle = delayTitle,
+                        severityLevel = severityLevel,
+                        weather = weather,
+                    )
+                )
+            } catch (e: Exception) {
+                _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchTrafficDelaysFromSupabase() {
+        viewModelScope.launch {
+            try {
+                val reports = client.postgrest["trafficdelay"].select().decodeList<TrafficData>()
+                _trafficDelays.value = reports
+                _uploadState.value = UploadState.Success("Traffic delay fetched successfully")
+            } catch (e: Exception) {
+                _uploadState.value = UploadState.Error("Failed to fetch reports: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteTrafficDelayFromSupabase(reportId: String) {
+        viewModelScope.launch {
+            try {
+                client.postgrest["trafficdelay"].delete {
+                    filter {
+                        eq("id", reportId)
+                    }
+                }
+            } catch (e: Exception) {
+                _uploadState.value = UploadState.Error("Failed to delete report: ${e.message}")
+            }
+        }
+    }
 }
 
 sealed class UploadState {
     data object Idle : UploadState()
     data object Loading : UploadState()
-    data object Success : UploadState()
+    data class Success(val message: String) : UploadState()
     data class Error(val message: String) : UploadState()
 }
 
