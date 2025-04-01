@@ -54,11 +54,16 @@ fun ProfileScreen(navController: NavHostController) {
                             Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary)
             )
         },
         bottomBar = {
-            BottomNavigationBar(navController)
+            if (!showSettings&&showAboutUs){
+                BottomNavigationBar(navController)
+            }else{
+                BottomNavigationBar(navController)
+            }
         }
     ) { paddingValues ->
         Column(
@@ -69,7 +74,7 @@ fun ProfileScreen(navController: NavHostController) {
         ) {
             when {
                 showAboutUs -> AboutUsScreen()
-                showSettings -> SettingsScreen()
+                showSettings -> SettingsScreen(navController)
                 else -> {
                     ProfileHeader(auth)
                     ProfileOptions(

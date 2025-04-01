@@ -18,9 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,14 +35,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
-import com.example.urbango.viewModels.PredictionViewModelML
 import com.example.urbango.viewModels.UploadState
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.DayOfWeek
 import org.osmdroid.util.GeoPoint
 import java.io.File
 import java.util.concurrent.Executors
@@ -51,7 +49,8 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.time.ZoneId
+import androidx.core.net.toUri
+import com.example.urbango.model.DelayReport
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,27 +60,23 @@ fun ReportScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val locationViewModel: PermissionViewModel = viewModel()
     val reportViewModel: DelayReportViewModel = viewModel()
-    val mlViewModel: PredictionViewModelML = viewModel()
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
     var reportDetails by remember { mutableStateOf("") }
     val selectedGeoPoints = remember { mutableStateListOf<GeoPoint>() }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageFileName by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     var showCamera by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val uploadState by reportViewModel.uploadState.collectAsState()
     var selectedSeverityLevel by remember { mutableStateOf("") }
-    var selctedSeverityIntValue by remember { mutableStateOf(0) }
+    var selctedSeverityIntValue by remember { mutableIntStateOf(0) }
     var selectedWeatherLevel by remember { mutableStateOf("") }
-    var outlineTextsFieldValue by remember { mutableStateOf("") }
     val listOfSeverity = listOf("Low", "Medium", "High")
     val listOfWeather =
         listOf("Clear", "Light Rain", "Moderate Rain", "Heavy Rain", "Cloudy", "Foggy", "Snow")
     val dropdownExpanded = remember { mutableStateOf(false) }
     val weatherDropdownExpanded = remember { mutableStateOf(false) }
-    val currentDateTime = LocalDateTime.now()
-    val dayOfWeek: DayOfWeek = currentDateTime.dayOfWeek
-    val timestamp = currentDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
     val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
@@ -97,15 +92,27 @@ fun ReportScreen(navController: NavHostController) {
     )
     val cardColor by remember { mutableStateOf(cardColors.random()) }
     var selectedCardTitle by remember { mutableStateOf("") }
+    var delayImages by remember { mutableStateOf<ByteArray?>(null) }
+
+
+//    LaunchedEffect(Unit) {
+//        val bucketName = "trafficimages"
+//        val bucket = client.storage[bucketName]
+//        val delayImage = bucket.downloadAuthenticated()
+//        delayImages = delayImage
+//    }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = {
-                Text(
-                    "Report",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            })
+            TopAppBar(
+                title = {
+                    Text(
+                        "Report",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary)
+            )
         },
         bottomBar = { BottomNavigationBar(navController) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -184,8 +191,9 @@ fun ReportScreen(navController: NavHostController) {
 
             if (showCamera) {
                 CameraCard(
-                    onImageCaptured = { uri ->
+                    onImageCaptured = { uri, filename ->
                         imageUri = uri
+                        imageFileName = filename
                         showCamera = false
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Image captured successfully!")
@@ -195,62 +203,6 @@ fun ReportScreen(navController: NavHostController) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Button(
-                onClick = {
-                    scope.launch {
-                        if (selectedGeoPoints.isNotEmpty()) {
-                            val lastPoint = selectedGeoPoints.last()
-                            reportViewModel.saveDelayReport(
-                                lastPoint.latitude,
-                                lastPoint.longitude,
-                                selectedCardTitle,
-                                selectedSeverityLevel
-                            )
-                            selctedSeverityIntValue = when (selectedSeverityLevel) {
-                                "Low" -> {
-                                    1
-                                }
-
-                                "Medium" -> {
-                                    3
-                                }
-
-                                "High" -> {
-                                    5
-                                }
-
-                                else -> {
-                                    2
-                                }
-                            }
-
-                            reportViewModel.saveTrafficDelaysInSupabase(
-                                lastPoint.latitude,
-                                lastPoint.longitude,
-                                selectedCardTitle,
-                                selctedSeverityIntValue,
-                                selectedWeatherLevel,
-
-                                )
-                        } else {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Please select a location on the map.")
-                            }
-                        }
-                    }
-                    reportDetails = ""
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-            ) {
-                Icon(Icons.Default.Send, contentDescription = "Send Report")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Submit Report")
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -308,26 +260,75 @@ fun ReportScreen(navController: NavHostController) {
                     modifier = Modifier.fillMaxSize()
                 )
             }
-        }
-    }
-    LaunchedEffect(uploadState) {
-        when (uploadState) {
-            is UploadState.Success -> snackbarHostState.showSnackbar("Report submitted successfully!")
-            is UploadState.Error -> snackbarHostState.showSnackbar((uploadState as UploadState.Error).message)
-            else -> {}
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    scope.launch {
+                        if (selectedGeoPoints.isNotEmpty()) {
+                            val lastPoint = selectedGeoPoints.last()
+                            reportViewModel.saveDelayReport(
+                                lastPoint.latitude,
+                                lastPoint.longitude,
+                                selectedCardTitle,
+                                selectedSeverityLevel,
+                                imageFileName.toString()
+                            )
+                            selctedSeverityIntValue = when (selectedSeverityLevel) {
+                                "Low" -> {
+                                    1
+                                }
+
+                                "Medium" -> {
+                                    3
+                                }
+
+                                "High" -> {
+                                    5
+                                }
+
+                                else -> {
+                                    2
+                                }
+                            }
+
+                            reportViewModel.saveTrafficDelaysInSupabase(
+                                lastPoint.latitude,
+                                lastPoint.longitude,
+                                selectedCardTitle,
+                                selctedSeverityIntValue,
+                                selectedWeatherLevel,
+                            )
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Please select a location on the map.")
+                            }
+                        }
+                    }
+                    reportDetails = ""
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send Report")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Submit Report")
+            }
         }
     }
 }
 
 
 @Composable
-fun CameraCard(onImageCaptured: (Uri) -> Unit, onClose: () -> Unit) {
+fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
     var hasCameraPermission by remember { mutableStateOf(false) }
+    var captureInProgress by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     // Permission handling
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -346,7 +347,7 @@ fun CameraCard(onImageCaptured: (Uri) -> Unit, onClose: () -> Unit) {
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
                 val preview = androidx.camera.core.Preview.Builder().build().also {
-                    it.surfaceProvider = previewView.surfaceProvider
+                    it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -374,7 +375,6 @@ fun CameraCard(onImageCaptured: (Uri) -> Unit, onClose: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Close Button
             IconButton(
                 onClick = onClose,
                 modifier = Modifier
@@ -402,36 +402,82 @@ fun CameraCard(onImageCaptured: (Uri) -> Unit, onClose: () -> Unit) {
             // Capture Button
             Button(
                 onClick = {
-                    val photoFile = File(context.cacheDir, "captured_image.jpg")
+                    if (captureInProgress) return@Button
+                    captureInProgress = true
+
+                    val photoFile = File.createTempFile(
+                        "captured_image_${System.currentTimeMillis()}",
+                        ".jpg",
+                        context.cacheDir
+                    )
+
                     val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
                     imageCapture.takePicture(
                         outputOptions,
                         executor,
                         object : ImageCapture.OnImageSavedCallback {
                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                onImageCaptured(Uri.fromFile(photoFile))
+                                scope.launch {
+                                    try {
+                                        val bucketName = "trafficimages"
+                                        val fileName = photoFile.name
+                                        val fileBytes = photoFile.readBytes()
+
+                                        client.storage
+                                            .from(bucketName)
+                                            .upload(
+                                                path = fileName,
+                                                data = fileBytes,
+                                            ) {
+                                                upsert = true
+                                            }
+
+                                        // Get public URL of the uploaded image
+                                        val publicUrl = client.storage
+                                            .from(bucketName)
+                                            .publicUrl(fileName)
+
+                                        onImageCaptured(publicUrl.toUri(), fileName)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        // Fallback to local file if upload fails
+                                        onImageCaptured(Uri.fromFile(photoFile), photoFile.name)
+                                    } finally {
+                                        captureInProgress = false
+                                    }
+                                }
                             }
 
                             override fun onError(exception: ImageCaptureException) {
                                 exception.printStackTrace()
+                                captureInProgress = false
                             }
-                        })
+                        }
+                    )
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp),
                 shape = CircleShape,
+                enabled = !captureInProgress,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text("Capture")
+                if (captureInProgress) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Capture")
+                }
             }
         }
     }
 }
-
 
 @Composable
 fun CardView(
@@ -473,14 +519,26 @@ fun CardView(
 sealed class CardItem(val title: String) {
     sealed class CardItems(content: String) : CardItem(title = content) {
         data object Card1 : CardItems("⏳ Delay")
-        data object Card2 : CardItems("⚠\uFE0F Accident")
+        data object Card2 : CardItems("⚠️ Accident")
         data object Card3 : CardItems("\uD83D\uDE8D Overcrowding")
         data object Card4 : CardItems("❌ Cancellation")
         data object Card5 : CardItems("\uD83D\uDEA6 Traffic Jam")
-        data object Card6 : CardItems("☀\uFE0F Weather")
-        data object Card7 : CardItems("\uD83D\uDED1 Other ")
+        data object Card6 : CardItems("\uD83D\uDED1 Other")
+        data object Card7 : CardItems("🚧 Road Construction")
+        data object Card8 : CardItems("🔧 Breakdown")
+        data object Card9 : CardItems("🌧️ Heavy Rain")
+        data object Card10 : CardItems("❄️ Snow")
+        data object Card11 : CardItems("💨 Strong Winds")
+        data object Card12 : CardItems("🏗️ Construction Zone")
+        data object Card13 : CardItems("🚓 Police Activity")
+        data object Card14 : CardItems("🚒 Fire Trucks")
+        data object Card15 : CardItems("🎉 Event/Parade")
+        data object Card16 : CardItems("⚡ Power Outage")
+        data object Card17 : CardItems("🌍 Natural Disaster")
+        data object Card18 : CardItems("🦠 Epidemic")
     }
 }
+
 
 val listOfCardItems = listOf(
     CardItem.CardItems.Card1,
@@ -490,4 +548,15 @@ val listOfCardItems = listOf(
     CardItem.CardItems.Card5,
     CardItem.CardItems.Card6,
     CardItem.CardItems.Card7,
+    CardItem.CardItems.Card8,
+    CardItem.CardItems.Card9,
+    CardItem.CardItems.Card10,
+    CardItem.CardItems.Card11,
+    CardItem.CardItems.Card12,
+    CardItem.CardItems.Card13,
+    CardItem.CardItems.Card14,
+    CardItem.CardItems.Card15,
+    CardItem.CardItems.Card16,
+    CardItem.CardItems.Card17,
+    CardItem.CardItems.Card18,
 )

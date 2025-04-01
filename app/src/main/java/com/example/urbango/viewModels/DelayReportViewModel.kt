@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
 import com.example.urbango.repository.SupabaseClient.client
 import com.google.firebase.auth.FirebaseAuth
@@ -55,7 +56,8 @@ class DelayReportViewModel : ViewModel() {
         latitude: Double,
         longitude: Double,
         problemReport: String,
-        severity: String
+        severity: String,
+        imageUri:String
     ) {
         val user = auth.currentUser
         if (user == null) {
@@ -71,12 +73,12 @@ class DelayReportViewModel : ViewModel() {
             "longitude" to longitude,
             "problemReport" to problemReport,
             "severity" to severity,
+            "imageUri" to imageUri,
             "timestamp" to System.currentTimeMillis()
         )
 
         db.collection("delays").add(reportData)
             .addOnSuccessListener {
-                // Ensure the user document exists and initialize points if necessary
                 val userRef = db.collection("users").document(user.uid)
                 userRef.get().addOnSuccessListener { document ->
                     if (!document.exists()) {
@@ -307,16 +309,3 @@ sealed class UploadState {
     data class Success(val message: String) : UploadState()
     data class Error(val message: String) : UploadState()
 }
-
-data class DelayReport(
-    val documentId: String = "",
-    val userId: String = "",
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0,
-    val problemReport: String = "",
-    val severity: String = "",
-    val timestamp: Long = 0,
-    val upvotes: Int = 0,
-    val downvotes: Int = 0,
-    val votedUsers: Map<String, String> = emptyMap()
-)

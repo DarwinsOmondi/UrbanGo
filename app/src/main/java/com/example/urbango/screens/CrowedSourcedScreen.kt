@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
-import com.example.urbango.viewModels.DelayReport
+import com.example.urbango.model.DelayReport
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.google.firebase.auth.FirebaseAuth
 

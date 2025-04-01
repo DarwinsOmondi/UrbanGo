@@ -11,28 +11,39 @@ import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.OnlinePrediction
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
-import com.example.urbango.model.PredictionResult
+import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
-import com.example.urbango.viewModels.DelayReport
+import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
 import com.example.urbango.viewModels.PredictionViewModelML
+import io.github.jan.supabase.storage.storage
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,13 +82,19 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary),
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate("predicteddelay")
-                    },
-                        Modifier.size(50.dp)
+                    IconButton(
+                        onClick = {
+                            navController.navigate("predicteddelay")
+                        },
+                        Modifier
+                            .size(50.dp)
                             .padding(8.dp)
-                        ) {
-                        Icon(Icons.Default.OnlinePrediction, contentDescription = "Predict Delay", tint = MaterialTheme.colorScheme.onPrimary)
+                    ) {
+                        Icon(
+                            Icons.Default.OnlinePrediction,
+                            contentDescription = "Predict Delay",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             )
@@ -159,11 +176,40 @@ fun ReportDetailsDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var delayImage by remember { mutableStateOf<ByteArray?>(null) }
+    LaunchedEffect(Unit) {
+        val bucketName = "trafficimages"
+        val bucket = client.storage[bucketName]
+        val downloadUrl = bucket.downloadAuthenticated(report.imageUri)
+        delayImage = downloadUrl
+    }
+    val timestamp = report.timestamp
+    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    val formattedTime = sdf.format(Date(timestamp))
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier,
         title = { Text("Delay Report") },
         text = {
             Column {
+                Text("Reported at: $formattedTime")
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(delayImage)
+                        .crossfade(true)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .build(),
+                    contentDescription = "delay image",
+                    modifier = Modifier
+                        .height(200.dp)
+                        .width(400.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(R.drawable.baseline_cloud_download_24)
+                )
                 Text("Problem: ${report.problemReport}")
                 Text("Severity: ${report.severity}")
                 Text("Accuracy: ${calculateAccuracyPercentage(report.upvotes, report.downvotes)}%")
