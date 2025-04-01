@@ -13,7 +13,6 @@
 ✅ **AI Predictions:** Utilize machine learning to predict delays using historical and real-time data.
 
 ## Stretch Goals 🎯
-
 🔹 **Micro-Mobility Integration:** Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for better last-mile connectivity.  
 🔹 **Offline Mode:** Allow users to access route data even in areas with limited internet connectivity.  
 
