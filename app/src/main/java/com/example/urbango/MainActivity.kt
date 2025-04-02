@@ -1,5 +1,6 @@
 package com.example.urbango
 
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -10,6 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -24,6 +26,7 @@ import com.example.urbango.screens.ReportScreen
 import com.example.urbango.screens.SignInScreen
 import com.example.urbango.screens.SignUpScreen
 import com.example.urbango.screens.SuggestedRouteScreen
+import com.example.urbango.screens.getUserLoggedInStates
 import com.example.urbango.ui.theme.UrbanGoTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -36,7 +39,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val auth = FirebaseAuth.getInstance()
             UrbanGoTheme {
-                UrbanGoApp(navController, auth)
+                UrbanGoApp(navController, auth,this)
             }
         }
     }
@@ -45,10 +48,11 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth) {
+fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth,context: Context) {
     val imageUriState = remember { mutableStateOf<Uri?>(null) }
+    val isUserLoggedIn = remember { mutableStateOf(getUserLoggedInStates(context)) }
 
-    val startDestination: String = if (auth.currentUser != null) {
+    val startDestination: String = if (isUserLoggedIn.value) {
         "home"
     } else {
         "onboarding"
@@ -67,7 +71,7 @@ fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth) {
                     navController.navigate("signin")
                 },
                 onSignUpSuccess = {
-                    navController.navigate("signin")
+                    navController.navigate("home")
                 },
                 auth = auth
             )
@@ -121,7 +125,8 @@ fun UrbanGoAppPreview() {
         val navController = rememberNavController()
         UrbanGoApp(
             navController,
-            auth = FirebaseAuth.getInstance()
+            auth = FirebaseAuth.getInstance(),
+            LocalContext.current
         )
     }
 }

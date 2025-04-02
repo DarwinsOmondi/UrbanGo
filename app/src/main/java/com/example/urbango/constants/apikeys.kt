@@ -4,8 +4,8 @@ import com.example.urbango.BuildConfig
 
 
 object Apikeys {
-    val geminiApiKey: String = BuildConfig.GEMINI_API_KEY
-    val suparbaseUrl: String = BuildConfig.SUPABASE_URL
-    val suparbaseKey: String = BuildConfig.SUPABASE_KEY
+    const val geminiApiKey: String = BuildConfig.GEMINI_API_KEY
+    const val suparbaseUrl: String = BuildConfig.SUPABASE_URL
+    const val suparbaseKey: String = BuildConfig.SUPABASE_KEY
 
 }

@@ -31,7 +31,7 @@ class GeminiRouteViewModel : ViewModel() {
     Suggest the best alternative route to reach $desiredDestination from $startingLocation, 
     avoiding traffic delays at these points: $locationOfDelay. 
     Explain the recommended route clearly, mentioning key roads and turns, 
-    but keep the response focused only on the directions.
+    but keep the response focused only on the directions,roads and turns.
 """.trimIndent()
                 val response = model.generateContent(query)
                 println(response.text)

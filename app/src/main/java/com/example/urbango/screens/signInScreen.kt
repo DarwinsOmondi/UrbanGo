@@ -1,5 +1,6 @@
 package com.example.urbango.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,6 +62,7 @@ fun SignInScreen(
     onNavigateToSignUp: () -> Unit = {},
     onSignInSuccess: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -184,12 +187,13 @@ fun SignInScreen(
                     onClick = {
                         scope.launch {
                             isLoading = true
-                            val results = signInUser(auth, email, password)
+                            val results = signInUser(auth, email, password,context)
                             client.auth.signInWith(Email) {
                                 this.email = email
                                 this.password = password
                             }
                             if (results.isSuccess) {
+                                isLoading = false
                                 onSignInSuccess()
                             } else {
                                 errorMessage = results.exceptionOrNull()?.message
@@ -226,10 +230,24 @@ fun SignInScreen(
     }
 }
 
-private suspend fun signInUser(auth: FirebaseAuth, email: String, password: String): Result<Unit> {
+private suspend fun signInUser(
+    auth: FirebaseAuth,
+    email: String,
+    password: String,
+    context: Context
+): Result<Unit> {
     return try {
+        val isUserLoggedIn = mutableStateOf(getUserLoggedInStates(context))
         if (email.isNotBlank() && password.isNotBlank()) {
             auth.signInWithEmailAndPassword(email, password).await()
+            val user = auth.currentUser
+            if (user != null) {
+                isUserLoggedIn.value = true
+                saveUserLoggedInStates(context, isUserLoggedIn.value)
+            } else {
+                isUserLoggedIn.value = true
+                saveUserLoggedInStates(context, isUserLoggedIn.value)
+            }
             Result.success(Unit)
         } else {
             Result.failure(Exception("Email and password cannot be empty"))

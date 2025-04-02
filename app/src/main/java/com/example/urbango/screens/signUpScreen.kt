@@ -1,5 +1,6 @@
 package com.example.urbango.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,6 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +65,7 @@ fun SignUpScreen(
     onSignUpSuccess: () -> Unit = {},
     auth: FirebaseAuth
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var userName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -212,8 +216,8 @@ fun SignUpScreen(
                     onClick = {
                         scope.launch {
                             isLoading = true
-                            val results = signUpUser(auth, userName, email, password)
-                            client.auth.signUpWith(Email){
+                            val results = signUpUser(auth, userName, email, password,context)
+                            client.auth.signUpWith(Email) {
                                 this.email = email
                                 this.password = password
                                 data = buildJsonObject {
@@ -262,11 +266,21 @@ private suspend fun signUpUser(
     auth: FirebaseAuth,
     userName: String,
     userEmail: String,
-    userPassword: String
+    userPassword: String,
+    context: Context
 ): Result<Unit> {
+    val isUserLoggedIn = mutableStateOf(getUserLoggedInStates(context))
     return try {
         if (userName.isNotEmpty() && userEmail.isNotEmpty() && userPassword.isNotEmpty()) {
             auth.createUserWithEmailAndPassword(userEmail, userPassword).await()
+            val user = auth.currentUser
+            if (user != null) {
+                isUserLoggedIn.value = true
+                saveUserLoggedInStates(context, isUserLoggedIn.value)
+            } else {
+                isUserLoggedIn.value = false
+                saveUserLoggedInStates(context, isUserLoggedIn.value)
+            }
             Result.success(Unit)
         } else {
             Result.failure(Exception("Please fill every fields"))
@@ -275,6 +289,16 @@ private suspend fun signUpUser(
         return Result.failure(e)
     }
 
+}
+
+fun saveUserLoggedInStates(context: Context, isLoggedIn: Boolean) {
+    val sharedPreferences = context.getSharedPreferences("UrbanGo", Context.MODE_PRIVATE)
+    sharedPreferences.edit() { putBoolean("isLoggedIn", isLoggedIn) }
+}
+
+fun getUserLoggedInStates(context: Context): Boolean {
+    val sharedPreferences = context.getSharedPreferences("UrbanGo", Context.MODE_PRIVATE)
+    return sharedPreferences.getBoolean("isLoggedIn", false)
 }
 
 @Preview(showBackground = true)
