@@ -1,5 +1,7 @@
 package com.example.urbango.screens
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.view.MotionEvent
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -51,6 +54,9 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import androidx.core.net.toUri
 import com.example.urbango.model.DelayReport
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.FileOutputStream
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -323,11 +329,18 @@ fun ReportScreen(navController: NavHostController) {
 fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val executor = remember { Executors.newSingleThreadExecutor() }
+    val cameraProvider = remember { ProcessCameraProvider.getInstance(context) }
+    val executor = ContextCompat.getMainExecutor(context)
     val previewView = remember { PreviewView(context) }
-    val imageCapture = remember { ImageCapture.Builder().build() }
+    val imageCapture = remember {
+        ImageCapture.Builder()
+            .setTargetResolution(android.util.Size(1280, 720))
+            .build()
+    }
+
     var hasCameraPermission by remember { mutableStateOf(false) }
     var captureInProgress by remember { mutableStateOf(false) }
+    var statusText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     // Permission handling
@@ -340,29 +353,23 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
         permissionLauncher.launch(android.Manifest.permission.CAMERA)
     }
 
-    // If permission is granted, initialize CameraX
-    if (hasCameraPermission) {
-        LaunchedEffect(Unit) {
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-                val preview = androidx.camera.core.Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    // Initialize CameraX
+    LaunchedEffect(hasCameraPermission) {
+        if (hasCameraPermission) {
+            val cameraProviderInstance = cameraProvider.get()
+            val preview = androidx.camera.core.Preview.Builder().build().also {
+                it.setSurfaceProvider(previewView.surfaceProvider)
+            }
 
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        preview,
-                        imageCapture
-                    )
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }, ContextCompat.getMainExecutor(context))
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            cameraProviderInstance.unbindAll()
+            cameraProviderInstance.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                preview,
+                imageCapture
+            )
         }
     }
 
@@ -370,7 +377,7 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(250.dp)
+            .height(300.dp)
             .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -395,15 +402,24 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
                     color = Color.Red
                 )
             } else {
-                // Camera Preview
                 AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
             }
 
-            // Capture Button
+            if (captureInProgress) {
+                Text(
+                    text = statusText,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 72.dp),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
             Button(
                 onClick = {
                     if (captureInProgress) return@Button
                     captureInProgress = true
+                    statusText = "Capturing..."
 
                     val photoFile = File.createTempFile(
                         "captured_image_${System.currentTimeMillis()}",
@@ -417,12 +433,26 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
                         executor,
                         object : ImageCapture.OnImageSavedCallback {
                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                scope.launch {
+                                scope.launch(Dispatchers.IO) {
                                     try {
-                                        val bucketName = "trafficimages"
-                                        val fileName = photoFile.name
-                                        val fileBytes = photoFile.readBytes()
+                                        statusText = "Compressing..."
 
+                                        // Compress the image
+                                        val bitmap =
+                                            BitmapFactory.decodeFile(photoFile.absolutePath)
+                                        val compressedFile =
+                                            File(context.cacheDir, "compressed_${photoFile.name}")
+                                        FileOutputStream(compressedFile).use { out ->
+                                            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                                        }
+                                        val fileBytes = compressedFile.readBytes()
+
+                                        val bucketName = "trafficimages"
+                                        val fileName = compressedFile.name
+
+                                        statusText = "Uploading..."
+
+                                        // Upload to Supabase
                                         client.storage
                                             .from(bucketName)
                                             .upload(
@@ -432,18 +462,23 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
                                                 upsert = true
                                             }
 
-                                        // Get public URL of the uploaded image
                                         val publicUrl = client.storage
                                             .from(bucketName)
                                             .publicUrl(fileName)
 
-                                        onImageCaptured(publicUrl.toUri(), fileName)
+                                        withContext(Dispatchers.Main) {
+                                            captureInProgress = false
+                                            statusText = ""
+                                            onImageCaptured(publicUrl.toUri(), fileName)
+                                        }
+
                                     } catch (e: Exception) {
                                         e.printStackTrace()
-                                        // Fallback to local file if upload fails
-                                        onImageCaptured(Uri.fromFile(photoFile), photoFile.name)
-                                    } finally {
-                                        captureInProgress = false
+                                        withContext(Dispatchers.Main) {
+                                            captureInProgress = false
+                                            statusText = ""
+                                            onImageCaptured(Uri.fromFile(photoFile), photoFile.name)
+                                        }
                                     }
                                 }
                             }
@@ -451,6 +486,7 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
                             override fun onError(exception: ImageCaptureException) {
                                 exception.printStackTrace()
                                 captureInProgress = false
+                                statusText = ""
                             }
                         }
                     )
@@ -478,6 +514,7 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
         }
     }
 }
+
 
 @Composable
 fun CardView(

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
+import com.example.urbango.model.UiState
 import com.example.urbango.repository.SupabaseClient.client
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -30,6 +31,9 @@ class DelayReportViewModel : ViewModel() {
 
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadState: StateFlow<UploadState> = _uploadState
+
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
     private val _delayReports = MutableStateFlow<List<DelayReport>>(emptyList())
     val delayReports: StateFlow<List<DelayReport>> = _delayReports
@@ -270,8 +274,9 @@ class DelayReportViewModel : ViewModel() {
                         weather = weather,
                     )
                 )
+                _uiState.value = UiState.Success("Delay Saved successfully")
             } catch (e: Exception) {
-                _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
+                _uiState.value = UiState.Error("Failed to save report: ${e.message}")
             }
         }
     }
@@ -281,9 +286,11 @@ class DelayReportViewModel : ViewModel() {
             try {
                 val reports = client.postgrest["trafficdelay"].select().decodeList<TrafficData>()
                 _trafficDelays.value = reports
+                _uiState.value = UiState.Success("Traffic delay fetched successfully")
                 _uploadState.value = UploadState.Success("Traffic delay fetched successfully")
             } catch (e: Exception) {
                 _uploadState.value = UploadState.Error("Failed to fetch reports: ${e.message}")
+                _uiState.value = UiState.Error("Failed to fetch report")
             }
         }
     }

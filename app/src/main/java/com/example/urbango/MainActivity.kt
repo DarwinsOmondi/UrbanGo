@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +18,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.urbango.components.PreferencesKeys
+import com.example.urbango.components.dataStore
 import com.example.urbango.screens.CrowdedScreen
 import com.example.urbango.screens.HomeScreen
 import com.example.urbango.screens.OnboardingScreen
@@ -29,6 +32,7 @@ import com.example.urbango.screens.SuggestedRouteScreen
 import com.example.urbango.screens.getUserLoggedInStates
 import com.example.urbango.ui.theme.UrbanGoTheme
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.map
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -38,7 +42,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val auth = FirebaseAuth.getInstance()
-            UrbanGoTheme {
+            val context = LocalContext.current
+            val dataStore = context.dataStore
+            val darkModeFlow = dataStore.data.map { preference ->
+                preference[PreferencesKeys.DARK_MODE] ?: false
+            }
+            val darkMode = darkModeFlow.collectAsState(initial = false)
+            UrbanGoTheme(darkTheme = darkMode.value){
                 UrbanGoApp(navController, auth,this)
             }
         }

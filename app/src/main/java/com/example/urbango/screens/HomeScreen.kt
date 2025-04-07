@@ -30,11 +30,14 @@ import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
+import com.example.urbango.model.UiState
 import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
 import com.example.urbango.viewModels.PredictionViewModelML
 import io.github.jan.supabase.storage.storage
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -56,6 +59,8 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
+    var delayImage by remember { mutableStateOf<ByteArray?>(null) }
+    val scope = rememberCoroutineScope()
 
 
     LaunchedEffect(Unit) {
@@ -68,6 +73,7 @@ fun HomeScreen(
     var selectedReport by remember { mutableStateOf<DelayReport?>(null) }
     var areaName by remember { mutableStateOf<String?>(null) }
     var routeSuggestionDialogVisible by remember { mutableStateOf(false) }
+    var uiState = delayReportViewModel.uiState.collectAsState()
 
     Configuration.getInstance().userAgentValue = context.packageName
 
@@ -130,6 +136,12 @@ fun HomeScreen(
                 ) { name ->
                     areaName = name
                 }
+                val bucketName = "trafficimages"
+                val bucket = client.storage[bucketName]
+                scope.launch {
+                    val downloadUrl = bucket.downloadAuthenticated(report.imageUri)
+                    delayImage = downloadUrl
+                }
                 // Trigger prediction for the selected report
                 mlViewModelML.predictTrafficDelay(
                     TrafficData(
@@ -164,7 +176,9 @@ fun HomeScreen(
                 delayReportViewModel.deleteDelayReport(report.documentId)
                 selectedReport = null
             },
-            onDismiss = { selectedReport = null }
+            onDismiss = { selectedReport = null },
+            delayImage,
+            uiState
         )
     }
 }
@@ -174,24 +188,21 @@ fun ReportDetailsDialog(
     report: DelayReport,
     areaName: String?,
     onDelete: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    delayImage: ByteArray?,
+    uiState: State<UiState>
 ) {
-    var delayImage by remember { mutableStateOf<ByteArray?>(null) }
-    LaunchedEffect(Unit) {
-        val bucketName = "trafficimages"
-        val bucket = client.storage[bucketName]
-        val downloadUrl = bucket.downloadAuthenticated(report.imageUri)
-        delayImage = downloadUrl
-    }
     val timestamp = report.timestamp
     val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     val formattedTime = sdf.format(Date(timestamp))
+
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier,
         title = { Text("Delay Report") },
         text = {
             Column {
+
                 Text("Reported at: $formattedTime")
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
