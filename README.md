@@ -16,7 +16,6 @@
 🔹 **Offline Mode:** Allow users to access route data even in areas with limited internet connectivity.  
 
 ## Tech Stack 🛠️
-
 - **Frontend:** Jetpack Compose (Android)
 - **Database:** Firebase for real-time updates
 - **Mapping:** OpenStreetMap for location tracking
