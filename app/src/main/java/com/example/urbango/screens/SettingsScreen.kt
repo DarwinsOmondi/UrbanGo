@@ -4,15 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,8 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
@@ -62,52 +55,54 @@ fun SettingsScreen(navHostController: NavHostController) {
         ) {
             SettingsOption(
                 title = "Dark Mode",
-                description = if (darkMode) "Enabled" else "Disabled"
-            ) {
-                scope.launch {
-                    dataStore.edit { preferences ->
-                        preferences[PreferencesKeys.DARK_MODE] = !darkMode
+                description = if (darkMode) "Enabled" else "Disabled",
+                onClick = {
+                    scope.launch {
+                        dataStore.edit { preferences ->
+                            preferences[PreferencesKeys.DARK_MODE] = !darkMode
+                        }
                     }
-                }
-            }
+                },
+                showRadioButton = true,
+                selected = darkMode,
+                radioButtonColors = RadioButtonDefaults.colors()
+            )
 
             HorizontalDivider()
 
             SettingsOption(
                 title = "Notifications",
-                description = if (notificationsEnabled) "Enabled" else "Disabled"
-            ) { notificationsEnabled = !notificationsEnabled }
+                description = if (notificationsEnabled) "Enabled" else "Disabled",
+                onClick = { notificationsEnabled = !notificationsEnabled }
+            )
 
-            HorizontalDivider()
-
-            // Change Password
             SettingsOption(
                 title = "Change Password",
-                description = "Update your password"
-            ) {
-                currentSheetType = SheetType.Password
-                isSheetOpen = true
-            }
-
-            HorizontalDivider()
+                description = "Update your password",
+                onClick = {
+                    currentSheetType = SheetType.Password
+                    isSheetOpen = true
+                }
+            )
 
             SettingsOption(
                 title = "Update Email",
-                description = auth.currentUser?.email ?: "No email set"
-            ) {
-                currentSheetType = SheetType.Email
-                isSheetOpen = true
-            }
-
-            HorizontalDivider()
+                description = auth.currentUser?.email ?: "No email set",
+                onClick = {
+                    currentSheetType = SheetType.Email
+                    isSheetOpen = true
+                }
+            )
 
             SettingsOption(
                 title = "Delete Account",
                 description = "Permanently delete your account",
-                isDanger = true
-            ) {
-                auth.currentUser?.delete()
-            }
+                isDanger = true,
+                onClick = {
+                    auth.currentUser?.delete()
+                }
+            )
+
         }
 
         if (isSheetOpen) {
@@ -279,13 +274,16 @@ fun PasswordUpdateSheet(
     }
 }
 
-// Settings Option Item
+// ✅ Updated SettingsOption Composable
 @Composable
 fun SettingsOption(
     title: String,
     description: String,
     isDanger: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showRadioButton: Boolean = false,
+    selected: Boolean = false,
+    radioButtonColors: RadioButtonColors? = null
 ) {
     Row(
         modifier = Modifier
@@ -307,9 +305,22 @@ fun SettingsOption(
                 color = Color.Gray
             )
         }
-        Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, tint = Color.Gray)
+
+        if (showRadioButton && radioButtonColors != null) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                colors = radioButtonColors
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = Color.Gray
+            )
+        }
     }
 }
 
-// Enum for Bottom Sheet Types
+// Bottom sheet types
 enum class SheetType { Email, Password, None }

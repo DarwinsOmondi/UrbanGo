@@ -30,14 +30,9 @@ import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
-import com.example.urbango.model.UiState
-import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
 import com.example.urbango.viewModels.PredictionViewModelML
-import io.github.jan.supabase.storage.storage
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -59,9 +54,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
-    var delayImage by remember { mutableStateOf<ByteArray?>(null) }
-    val scope = rememberCoroutineScope()
-
+    val delayImage = delayReportViewModel.imageUri.collectAsState().value
 
     LaunchedEffect(Unit) {
         delayReportViewModel.fetchDelayReports()
@@ -73,7 +66,6 @@ fun HomeScreen(
     var selectedReport by remember { mutableStateOf<DelayReport?>(null) }
     var areaName by remember { mutableStateOf<String?>(null) }
     var routeSuggestionDialogVisible by remember { mutableStateOf(false) }
-    var uiState = delayReportViewModel.uiState.collectAsState()
 
     Configuration.getInstance().userAgentValue = context.packageName
 
@@ -136,12 +128,9 @@ fun HomeScreen(
                 ) { name ->
                     areaName = name
                 }
-                val bucketName = "trafficimages"
-                val bucket = client.storage[bucketName]
-                scope.launch {
-                    val downloadUrl = bucket.downloadAuthenticated(report.imageUri)
-                    delayImage = downloadUrl
-                }
+                delayReportViewModel.fetchTrafficImage(
+                    report.imageUri
+                )
                 // Trigger prediction for the selected report
                 mlViewModelML.predictTrafficDelay(
                     TrafficData(
@@ -178,7 +167,6 @@ fun HomeScreen(
             },
             onDismiss = { selectedReport = null },
             delayImage,
-            uiState
         )
     }
 }
@@ -190,7 +178,6 @@ fun ReportDetailsDialog(
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
     delayImage: ByteArray?,
-    uiState: State<UiState>
 ) {
     val timestamp = report.timestamp
     val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -369,7 +356,7 @@ fun createMarkerWithColor(context: Context, color: Int): Drawable {
     return drawable
 }
 
-fun calculateAccuracyPercentage(upvotes: Int, downvotes: Int): Int {
-    val totalVotes = upvotes + downvotes
-    return if (totalVotes > 0) (upvotes * 100) / totalVotes else 0
+fun calculateAccuracyPercentage(upvote: Int, downvotes: Int): Int {
+    val totalVotes = upvote + downvotes
+    return if (totalVotes > 0) (upvote * 100) / totalVotes else 0
 }

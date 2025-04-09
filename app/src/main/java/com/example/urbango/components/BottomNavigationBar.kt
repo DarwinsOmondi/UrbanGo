@@ -4,16 +4,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRailItemColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
 import com.example.urbango.R
-import kotlin.io.encoding.Base64
-import kotlin.random.Random
 
 sealed class BottomNavigationBar(val route: String, val title: String){
     sealed class BottomNavigationBarItem(val bRoute:String, val bTitle:String, val bIcon:Int): BottomNavigationBar(route = bRoute, title = bTitle){
@@ -32,18 +31,19 @@ val listOfBottomItems = listOf(
 )
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController){
+fun BottomNavigationBar(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route
-    NavigationBar (
-        containerColor = MaterialTheme.colorScheme.primary
-    ){
-        listOfBottomItems.forEach { screen->
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    ) {
+        listOfBottomItems.forEach { screen ->
             NavigationBarItem(
                 selected = currentRoute == screen.bRoute,
                 onClick = {
-                    navController.navigate(screen.bRoute){
+                    navController.navigate(screen.bRoute) {
                         navController.graph.startDestinationRoute?.let {
-                            popUpTo(it){
+                            popUpTo(it) {
                                 saveState = true
                             }
                             launchSingleTop = true
@@ -55,12 +55,12 @@ fun BottomNavigationBar(navController: NavHostController){
                     Icon(
                         painter = painterResource(id = screen.bIcon),
                         contentDescription = screen.bTitle,
-                        tint =
-                            if (currentRoute == screen.bRoute){
-                                MaterialTheme.colorScheme.primary
-                            }else{
-                                MaterialTheme.colorScheme.onBackground
-                            }
+                        modifier = Modifier.size(24.dp),
+                        tint = if (currentRoute == screen.bRoute) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        }
                     )
                 }
             )
@@ -70,6 +70,6 @@ fun BottomNavigationBar(navController: NavHostController){
 
 @Preview(showBackground = true)
 @Composable
-fun BottomNavigationBarPreview(){
+fun BottomNavigationBarPreview() {
     BottomNavigationBar(navController = NavHostController(LocalContext.current))
 }

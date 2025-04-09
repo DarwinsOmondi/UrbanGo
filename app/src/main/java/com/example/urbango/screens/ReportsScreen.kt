@@ -53,6 +53,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import androidx.core.net.toUri
+import com.example.urbango.components.MessageSnackBar
 import com.example.urbango.model.DelayReport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -83,6 +84,8 @@ fun ReportScreen(navController: NavHostController) {
         listOf("Clear", "Light Rain", "Moderate Rain", "Heavy Rain", "Cloudy", "Foggy", "Snow")
     val dropdownExpanded = remember { mutableStateOf(false) }
     val weatherDropdownExpanded = remember { mutableStateOf(false) }
+    val isLoading = reportViewModel.isLoading.collectAsState()
+    val error = reportViewModel.error.collectAsState()
 
     val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
@@ -174,12 +177,11 @@ fun ReportScreen(navController: NavHostController) {
                     )
                 }
             }
-
-
             OutlinedTextField(
                 value = selectedCardTitle,
                 onValueChange = { selectedCardTitle = it },
                 label = { Text("Report Issue") },
+                readOnly = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
                     IconButton(onClick = { showCamera = !showCamera }) {
@@ -191,8 +193,9 @@ fun ReportScreen(navController: NavHostController) {
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors()
-            )
+                colors = TextFieldDefaults.outlinedTextFieldColors(),
+
+                )
             Spacer(modifier = Modifier.height(16.dp))
 
             if (showCamera) {
@@ -316,9 +319,11 @@ fun ReportScreen(navController: NavHostController) {
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send Report")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Submit Report")
+                if (isLoading.value) {
+                    LinearProgressIndicator()
+                } else {
+                    Text("Submit Report")
+                }
             }
         }
     }

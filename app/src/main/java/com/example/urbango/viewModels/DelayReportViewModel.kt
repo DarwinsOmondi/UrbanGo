@@ -14,6 +14,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.Bucket
+import io.github.jan.supabase.storage.BucketApi
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -32,14 +35,21 @@ class DelayReportViewModel : ViewModel() {
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadState: StateFlow<UploadState> = _uploadState
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
-    val uiState: StateFlow<UiState> = _uiState
-
     private val _delayReports = MutableStateFlow<List<DelayReport>>(emptyList())
     val delayReports: StateFlow<List<DelayReport>> = _delayReports
 
     private val _trafficDelays = MutableStateFlow<List<TrafficData>>(emptyList())
     val trafficDelays: StateFlow<List<TrafficData>> = _trafficDelays
+
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _error = MutableStateFlow<String>("")
+    val error: StateFlow<String> = _error
+
+    private val _imageUri = MutableStateFlow<ByteArray?>(null)
+    val imageUri: StateFlow<ByteArray?> = _imageUri
+
 
     init {
         startAutoRefresh()
@@ -61,7 +71,7 @@ class DelayReportViewModel : ViewModel() {
         longitude: Double,
         problemReport: String,
         severity: String,
-        imageUri:String
+        imageUri: String
     ) {
         val user = auth.currentUser
         if (user == null) {
@@ -83,6 +93,7 @@ class DelayReportViewModel : ViewModel() {
 
         db.collection("delays").add(reportData)
             .addOnSuccessListener {
+                _isLoading.value = true
                 val userRef = db.collection("users").document(user.uid)
                 userRef.get().addOnSuccessListener { document ->
                     if (!document.exists()) {
@@ -91,16 +102,22 @@ class DelayReportViewModel : ViewModel() {
                         userRef.update("points", FieldValue.increment(10))
                     }
                 }
+                _isLoading.value = false
                 _uploadState.value = UploadState.Success("Report saved successfully")
+                _error.value = "Report saved successfully"
+
             }
             .addOnFailureListener { e ->
+                _isLoading.value = false
                 _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
+                _error.value = "Failed to save report"
             }
     }
 
     fun fetchDelayReports() {
         db.collection("delays")
             .addSnapshotListener { snapshots, e ->
+                _isLoading.value = true
                 if (e != null) {
                     _uploadState.value =
                         UploadState.Error("Failed to listen for updates: ${e.message}")
@@ -110,8 +127,8 @@ class DelayReportViewModel : ViewModel() {
                 val reports = snapshots?.documents?.mapNotNull { document ->
                     document.toObject(DelayReport::class.java)?.copy(documentId = document.id)
                 } ?: emptyList()
-
                 _delayReports.value = reports
+                _isLoading.value = false
             }
     }
 
@@ -263,6 +280,7 @@ class DelayReportViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 val severityLevel = severity
 
                 client.postgrest["trafficdelay"].insert(
@@ -274,9 +292,10 @@ class DelayReportViewModel : ViewModel() {
                         weather = weather,
                     )
                 )
-                _uiState.value = UiState.Success("Delay Saved successfully")
+                _isLoading.value = false
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("Failed to save report: ${e.message}")
+                _isLoading.value = false
+                _error.value = "Error saving traffic data"
             }
         }
     }
@@ -286,11 +305,9 @@ class DelayReportViewModel : ViewModel() {
             try {
                 val reports = client.postgrest["trafficdelay"].select().decodeList<TrafficData>()
                 _trafficDelays.value = reports
-                _uiState.value = UiState.Success("Traffic delay fetched successfully")
                 _uploadState.value = UploadState.Success("Traffic delay fetched successfully")
             } catch (e: Exception) {
                 _uploadState.value = UploadState.Error("Failed to fetch reports: ${e.message}")
-                _uiState.value = UiState.Error("Failed to fetch report")
             }
         }
     }
@@ -306,6 +323,14 @@ class DelayReportViewModel : ViewModel() {
             } catch (e: Exception) {
                 _uploadState.value = UploadState.Error("Failed to delete report: ${e.message}")
             }
+        }
+    }
+
+    fun fetchTrafficImage(imageUri: String) {
+        viewModelScope.launch {
+            val bucket = client.storage["trafficimages"]
+            val downloadImageUri = bucket.downloadAuthenticated(imageUri)
+            _imageUri.value = downloadImageUri
         }
     }
 }
