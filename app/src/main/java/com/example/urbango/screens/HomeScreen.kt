@@ -75,7 +75,8 @@ fun HomeScreen(
                 title = {
                     Text(
                         "Home",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary),
@@ -109,7 +110,7 @@ fun HomeScreen(
             ) {
                 Icon(Icons.Default.Directions, contentDescription = "Suggest Route")
             }
-        }
+        },
     ) { paddingValues ->
         OSMDroidMapView(
             modifier = Modifier

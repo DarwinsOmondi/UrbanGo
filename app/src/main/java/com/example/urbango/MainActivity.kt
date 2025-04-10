@@ -8,6 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +34,7 @@ import com.example.urbango.screens.SignUpScreen
 import com.example.urbango.screens.SuggestedRouteScreen
 import com.example.urbango.screens.getUserLoggedInStates
 import com.example.urbango.ui.theme.UrbanGoTheme
+import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.map
 
@@ -48,17 +52,18 @@ class MainActivity : ComponentActivity() {
                 preference[PreferencesKeys.DARK_MODE] ?: false
             }
             val darkMode = darkModeFlow.collectAsState(initial = false)
-            UrbanGoTheme(darkTheme = darkMode.value){
-                UrbanGoApp(navController, auth,this)
+            UrbanGoTheme(darkTheme = darkMode.value) {
+                UrbanGoApp(navController, auth, this)
             }
         }
     }
 }
 
 
+@OptIn(ExperimentalAnimationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth,context: Context) {
+fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth, context: Context) {
     val imageUriState = remember { mutableStateOf<Uri?>(null) }
     val isUserLoggedIn = remember { mutableStateOf(getUserLoggedInStates(context)) }
 
@@ -67,7 +72,13 @@ fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth,context: Con
     } else {
         "onboarding"
     }
-    NavHost(navController = navController, startDestination = startDestination) {
+    AnimatedNavHost(
+        navController = navController,
+        startDestination = startDestination,
+        enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) },
+        exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) },
+        popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) },
+        popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) }) {
         composable("onboarding") {
             OnboardingScreen(
                 onNavigateToSignUP = {

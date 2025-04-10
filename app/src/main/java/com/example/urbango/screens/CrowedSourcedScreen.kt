@@ -1,6 +1,7 @@
 package com.example.urbango.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
@@ -45,7 +48,18 @@ fun CrowdedScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Crowded Reports") })
+            TopAppBar(
+                title = {
+                    Text(
+                        "Crowded Reports",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    MaterialTheme.colorScheme.primary
+                )
+            )
         },
         bottomBar = {
             BottomNavigationBar(navController)
@@ -129,45 +143,68 @@ fun DelayReportCard(
         ) {
             Text(
                 "Report by : ${report.userId}",
-                style = MaterialTheme.typography.bodySmall
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = "Problem : ${report.problemReport}",
-                style = MaterialTheme.typography.bodySmall
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
             )
-            areaName?.let { Text(text = "Area: $it", style = MaterialTheme.typography.bodySmall) }
+            areaName?.let {
+                Text(
+                    text = "Area: $it",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
 
             Text(
                 text = "severity: ${report.severity}",
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = "Accuracy: $accuracyPercentage%",
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.Bottom
             ) {
-                IconButton(onClick = onUpvote) {
-                    Icon(
-                        imageVector = Icons.Default.ThumbUp,
-                        contentDescription = "Upvote",
-                        tint = if (userVote == "upvote") Color.Green else Color.Gray,
-                        modifier = Modifier.size(20.dp)
+                Row {
+                    IconButton(onClick = onUpvote) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = "Upvote",
+                            tint = if (userVote == "upvote") Color.Green else Color.Gray,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                    Text(
+                        text = "${report.upvotes}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
-                Text(text = "${report.upvotes}")
-                IconButton(onClick = onDownvote) {
-                    Icon(
-                        imageVector = Icons.Default.ThumbDown,
-                        contentDescription = "Down vote",
-                        tint = if (userVote == "downvote") Color.Red else Color.Gray,
-                        modifier = Modifier.size(20.dp)
+
+                Row {
+                    IconButton(onClick = onDownvote) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbDown,
+                            contentDescription = "Down vote",
+                            tint = if (userVote == "downvote") Color.Red else Color.Gray,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                    Text(
+                        text = "${report.downvotes}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
-                Text(text = "${report.downvotes}")
             }
         }
     }

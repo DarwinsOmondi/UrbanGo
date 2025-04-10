@@ -56,7 +56,14 @@ fun SuggestedRouteScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Suggested Routes", style = MaterialTheme.typography.titleMedium) }
+                title = {
+                    Text(
+                        "Suggested Routes",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary)
             )
         }
     ) { paddingValues ->

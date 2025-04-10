@@ -7,8 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +44,7 @@ fun SettingsScreen(navHostController: NavHostController) {
 
     var isSheetOpen by remember { mutableStateOf(false) }
     var currentSheetType by remember { mutableStateOf(SheetType.None) }
+    var showDeleteAccountAlertDialog by remember { mutableStateOf(false) }
 
     val sheetState = rememberModalBottomSheetState()
     Scaffold { innerPadding ->
@@ -56,16 +58,15 @@ fun SettingsScreen(navHostController: NavHostController) {
             SettingsOption(
                 title = "Dark Mode",
                 description = if (darkMode) "Enabled" else "Disabled",
-                onClick = {
+                showSwitch = true,
+                switchChecked = darkMode,
+                onSwitchChange = {
                     scope.launch {
                         dataStore.edit { preferences ->
-                            preferences[PreferencesKeys.DARK_MODE] = !darkMode
+                            preferences[PreferencesKeys.DARK_MODE] = it
                         }
                     }
-                },
-                showRadioButton = true,
-                selected = darkMode,
-                radioButtonColors = RadioButtonDefaults.colors()
+                }
             )
 
             HorizontalDivider()
@@ -73,8 +74,12 @@ fun SettingsScreen(navHostController: NavHostController) {
             SettingsOption(
                 title = "Notifications",
                 description = if (notificationsEnabled) "Enabled" else "Disabled",
-                onClick = { notificationsEnabled = !notificationsEnabled }
+                showSwitch = true,
+                switchChecked = notificationsEnabled,
+                onSwitchChange = { notificationsEnabled = it }
             )
+
+            HorizontalDivider()
 
             SettingsOption(
                 title = "Change Password",
@@ -85,6 +90,8 @@ fun SettingsScreen(navHostController: NavHostController) {
                 }
             )
 
+            HorizontalDivider()
+
             SettingsOption(
                 title = "Update Email",
                 description = auth.currentUser?.email ?: "No email set",
@@ -94,15 +101,16 @@ fun SettingsScreen(navHostController: NavHostController) {
                 }
             )
 
+            HorizontalDivider()
+
             SettingsOption(
                 title = "Delete Account",
                 description = "Permanently delete your account",
                 isDanger = true,
                 onClick = {
-                    auth.currentUser?.delete()
+                    showDeleteAccountAlertDialog = !showDeleteAccountAlertDialog
                 }
             )
-
         }
 
         if (isSheetOpen) {
@@ -125,6 +133,54 @@ fun SettingsScreen(navHostController: NavHostController) {
                 }
             }
         }
+
+        if (showDeleteAccountAlertDialog) {
+            AlertDialog(
+                title = {
+                    Text(
+                        "Are you sure you want to delete your account ?",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                onDismissRequest = {
+                    showDeleteAccountAlertDialog = !showDeleteAccountAlertDialog
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            auth.currentUser?.delete()
+                        }
+                    ) {
+                        Text(
+                            "Delete",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Red
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteAccountAlertDialog = !showDeleteAccountAlertDialog
+                        },
+                    ) {
+                        Text(
+                            "Cancel",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -143,7 +199,11 @@ fun EmailUpdateSheet(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(text = "Update Email", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Update Email",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
@@ -153,9 +213,8 @@ fun EmailUpdateSheet(
                 Text(
                     "New Email",
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                        fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
                     ),
                     modifier = Modifier.align(Alignment.Start)
                 )
@@ -180,10 +239,14 @@ fun EmailUpdateSheet(
             horizontalArrangement = Arrangement.End
         ) {
             TextButton(onClick = onClose) {
-                Text("Cancel")
+                Text(
+                    "Cancel",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
             Spacer(modifier = Modifier.weight(.5f))
-            Button(onClick = {
+            TextButton(onClick = {
                 auth.currentUser?.updateEmail(email)?.addOnCompleteListener { task ->
                     scope.launch {
                         if (task.isSuccessful) {
@@ -195,7 +258,11 @@ fun EmailUpdateSheet(
                     onClose()
                 }
             }) {
-                Text("Update")
+                Text(
+                    "Update",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
         }
     }
@@ -216,7 +283,11 @@ fun PasswordUpdateSheet(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(text = "Update Password", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Update Password",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
@@ -226,9 +297,8 @@ fun PasswordUpdateSheet(
                 Text(
                     "New Password",
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                        fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
                     ),
                     modifier = Modifier.align(Alignment.Start)
                 )
@@ -253,42 +323,50 @@ fun PasswordUpdateSheet(
             horizontalArrangement = Arrangement.End
         ) {
             TextButton(onClick = onClose) {
-                Text("Cancel")
+                Text(
+                    "Cancel",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
             Spacer(modifier = Modifier.weight(.5f))
-            Button(onClick = {
-                auth.currentUser?.updatePassword(password)?.addOnCompleteListener { task ->
-                    scope.launch {
-                        if (task.isSuccessful) {
-                            snackbarHostState.showSnackbar("Password updated successfully")
-                        } else {
-                            snackbarHostState.showSnackbar("Failed to update password")
+            TextButton(
+                onClick = {
+                    auth.currentUser?.updatePassword(password)?.addOnCompleteListener { task ->
+                        scope.launch {
+                            if (task.isSuccessful) {
+                                snackbarHostState.showSnackbar("Password updated successfully")
+                            } else {
+                                snackbarHostState.showSnackbar("Failed to update password")
+                            }
                         }
+                        onClose()
                     }
-                    onClose()
-                }
-            }) {
-                Text("Update")
+                }) {
+                Text(
+                    "Update",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
         }
     }
 }
 
-// ✅ Updated SettingsOption Composable
 @Composable
 fun SettingsOption(
     title: String,
     description: String,
     isDanger: Boolean = false,
-    onClick: () -> Unit,
-    showRadioButton: Boolean = false,
-    selected: Boolean = false,
-    radioButtonColors: RadioButtonColors? = null
+    showSwitch: Boolean = false,
+    switchChecked: Boolean = false,
+    onSwitchChange: ((Boolean) -> Unit)? = null,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -306,17 +384,16 @@ fun SettingsOption(
             )
         }
 
-        if (showRadioButton && radioButtonColors != null) {
-            RadioButton(
-                selected = selected,
-                onClick = onClick,
-                colors = radioButtonColors
+        if (showSwitch && onSwitchChange != null) {
+            Switch(
+                checked = switchChecked,
+                onCheckedChange = onSwitchChange
             )
         } else {
             Icon(
-                imageVector = Icons.Default.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = Color.Gray
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }

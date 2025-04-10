@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.example.urbango.R
 
 sealed class BottomNavigationBar(val route: String, val title: String){
@@ -35,7 +36,7 @@ fun BottomNavigationBar(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
+        contentColor = MaterialTheme.colorScheme.primary
     ) {
         listOfBottomItems.forEach { screen ->
             NavigationBarItem(
@@ -57,9 +58,9 @@ fun BottomNavigationBar(navController: NavHostController) {
                         contentDescription = screen.bTitle,
                         modifier = Modifier.size(24.dp),
                         tint = if (currentRoute == screen.bRoute) {
-                            MaterialTheme.colorScheme.primary
+                            Color.Black
                         } else {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.7f)
                         }
                     )
                 }

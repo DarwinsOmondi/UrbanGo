@@ -42,7 +42,8 @@ fun ProfileScreen(navController: NavHostController) {
                             showSettings -> "Settings"
                             else -> "Profile"
                         },
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
                     )
                 },
                 navigationIcon = {
@@ -59,12 +60,12 @@ fun ProfileScreen(navController: NavHostController) {
             )
         },
         bottomBar = {
-            if (!showSettings&&showAboutUs){
+            if (!showSettings && showAboutUs) {
                 BottomNavigationBar(navController)
-            }else{
+            } else {
                 BottomNavigationBar(navController)
             }
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -166,7 +167,7 @@ fun ProfileOptions(
     onSignOut: () -> Unit,
     onShowAboutUs: () -> Unit,
     onShowSettings: () -> Unit,
-    auth: FirebaseAuth
+    auth: FirebaseAuth,
 ) {
     Card(
         modifier = Modifier
@@ -176,15 +177,15 @@ fun ProfileOptions(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column {
-            ProfileOption(Icons.Default.Settings, "Settings") {
+            ProfileOption(Icons.Default.Settings, false, "Settings") {
                 onShowSettings()
             }
             HorizontalDivider()
-            ProfileOption(Icons.Default.Info, "About Us") {
+            ProfileOption(Icons.Default.Info, false, "About Us") {
                 onShowAboutUs()
             }
             HorizontalDivider()
-            ProfileOption(Icons.AutoMirrored.Filled.ExitToApp, "Log Out") {
+            ProfileOption(Icons.AutoMirrored.Filled.ExitToApp, true, "Log Out") {
                 auth.signOut()
                 onSignOut()
             }
@@ -193,7 +194,12 @@ fun ProfileOptions(
 }
 
 @Composable
-fun ProfileOption(icon: ImageVector, title: String, onClick: () -> Unit) {
+fun ProfileOption(
+    icon: ImageVector,
+    isDanger: Boolean = false,
+    title: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,9 +207,18 @@ fun ProfileOption(icon: ImageVector, title: String, onClick: () -> Unit) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF1976D2))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isDanger) Color.Red else MaterialTheme.colorScheme.onSurface
+        )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text = title, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = if (isDanger) Color.Red else MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

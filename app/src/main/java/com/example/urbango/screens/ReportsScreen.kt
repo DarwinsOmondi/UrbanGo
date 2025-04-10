@@ -117,14 +117,15 @@ fun ReportScreen(navController: NavHostController) {
                 title = {
                     Text(
                         "Report",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary)
             )
         },
         bottomBar = { BottomNavigationBar(navController) },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Column(
             modifier = Modifier

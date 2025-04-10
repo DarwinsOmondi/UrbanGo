@@ -54,7 +54,8 @@ fun PredictedDelayScreen(
                 title = {
                     Text(
                         "Prediction",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.background
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primary),
@@ -114,7 +115,7 @@ fun PredictionCard(
             )
             Text("ML Prediction:", style = MaterialTheme.typography.titleSmall)
             Text(
-                "Expect a ${predictionResult.predictedSeverity} "+
+                "Expect a ${predictionResult.predictedSeverity} " +
                         "likely on ${predictionResult.predictedDay} around ${predictionResult.predictedTime}. " +
                         "Location: ${predictionResult.location}. Weather: ${predictionResult.weather}.",
                 style = MaterialTheme.typography.bodyMedium

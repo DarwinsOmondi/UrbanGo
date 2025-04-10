@@ -1,6 +1,8 @@
 package com.example.urbango.screens
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +17,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -29,13 +35,13 @@ import androidx.compose.ui.unit.sp
 fun AboutUsScreen() {
     Scaffold(
         Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background)
+            .fillMaxSize(),
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .padding(8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -75,6 +81,7 @@ fun AboutUsScreen() {
 
 @Composable
 fun AboutUsCard(title: String, content: String) {
+    var expanded by remember { mutableStateOf(false) }
     val brush = Brush.horizontalGradient(
         colors = listOf(
             Color.White,
@@ -87,11 +94,13 @@ fun AboutUsCard(title: String, content: String) {
         Modifier
             .fillMaxWidth()
             .shadow(elevation = 5.dp, shape = RoundedCornerShape(3.dp))
+            .clickable { expanded = !expanded }
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
+                .animateContentSize()
+                .background(MaterialTheme.colorScheme.onSurface)
                 .align(Alignment.Start),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -99,14 +108,15 @@ fun AboutUsCard(title: String, content: String) {
                 text = title,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.background,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = content,
+                maxLines = if (expanded) Int.MAX_VALUE else 2,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.background,
                 textAlign = TextAlign.Center,
             )
         }
