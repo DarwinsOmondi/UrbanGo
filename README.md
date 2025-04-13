@@ -18,7 +18,6 @@
 - **Frontend:** Jetpack Compose (Android)
 - **Database:** Firebase for real-time updates
 - **Mapping:** OpenStreetMap for location tracking
-
 ## Why UrbanGo? 🌍
 🔹 **Community-Driven:** Users contribute real-time information to enhance the public transport experience.  
 🔹 **Increased Accessibility:** Designed with special features for people with disabilities.  
