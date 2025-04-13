@@ -99,13 +99,12 @@ dependencies {
     implementation(libs.androidx.camera.view.v130)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.kotlinx.coroutines.guava)
-    implementation(libs.generativeai)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation ("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     //ktor
     implementation("io.ktor:ktor-client-android:3.1.1")
-    implementation("io.ktor:ktor-client-core:3.1.1")
-    implementation("io.ktor:ktor-client-serialization:3.1.1")
+
 
     // Supabase dependencies
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.3"))

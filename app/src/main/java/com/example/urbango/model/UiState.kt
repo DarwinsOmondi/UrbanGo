@@ -1,7 +1,5 @@
 package com.example.urbango.model
 
-import com.example.urbango.viewModels.UploadState
-
 sealed class UiState {
     data object Idle : UiState()
     data object Loading : UiState()

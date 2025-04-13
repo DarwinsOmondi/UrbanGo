@@ -1,5 +1,6 @@
 package com.example.urbango.screens
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.components.DelayReportViewModelFactory
 import com.example.urbango.model.DelayReport
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -30,7 +32,10 @@ import com.google.firebase.auth.FirebaseAuth
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrowdedScreen(navController: NavHostController) {
-    val viewModel: DelayReportViewModel = viewModel()
+    val context = LocalContext.current
+    val viewModel: DelayReportViewModel = viewModel(
+        factory = DelayReportViewModelFactory(context)
+    )
     val delayReports by viewModel.delayReports.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
@@ -40,7 +45,7 @@ fun CrowdedScreen(navController: NavHostController) {
 
     val filteredReports = delayReports.filter { report ->
         val areaName = remember { mutableStateOf<String?>(null) }
-        viewModel.fetchAreaName(LocalContext.current, report.latitude, report.longitude) { name ->
+        viewModel.fetchAreaName(report.latitude, report.longitude) { name ->
             areaName.value = name
         }
         areaName.value?.contains(searchQuery, ignoreCase = true) == true
@@ -97,7 +102,8 @@ fun CrowdedScreen(navController: NavHostController) {
                     DelayReportCard(
                         report = report,
                         onUpvote = { viewModel.upvoteReport(report.documentId) },
-                        onDownvote = { viewModel.downvoteReport(report.documentId) }
+                        onDownvote = { viewModel.downvoteReport(report.documentId) },
+                        context
                     )
                 }
             }
@@ -110,7 +116,8 @@ fun CrowdedScreen(navController: NavHostController) {
 fun DelayReportCard(
     report: DelayReport,
     onUpvote: () -> Unit,
-    onDownvote: () -> Unit
+    onDownvote: () -> Unit,
+    context: Context
 ) {
     val auth = FirebaseAuth.getInstance()
     val userId = auth.currentUser?.uid
@@ -124,7 +131,6 @@ fun DelayReportCard(
 
 
     delayReportViewModel.fetchAreaName(
-        LocalContext.current,
         report.latitude,
         report.longitude
     ) { name ->

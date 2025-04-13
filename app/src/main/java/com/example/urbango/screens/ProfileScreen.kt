@@ -31,7 +31,6 @@ fun ProfileScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     var showAboutUs by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
-
     Scaffold(
         topBar = {
             TopAppBar(

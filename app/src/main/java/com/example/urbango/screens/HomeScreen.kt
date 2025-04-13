@@ -1,8 +1,10 @@
 package com.example.urbango.screens
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -28,6 +32,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.components.DelayReportViewModelFactory
 import com.example.urbango.model.DelayReport
 import com.example.urbango.model.TrafficData
 import com.example.urbango.viewModels.DelayReportViewModel
@@ -49,12 +54,16 @@ fun HomeScreen(
     navController: NavHostController,
     onNavigateToSuggestedRoute: () -> Unit,
     locationViewModel: PermissionViewModel = viewModel(),
-    delayReportViewModel: DelayReportViewModel = viewModel(),
     mlViewModelML: PredictionViewModelML = viewModel(),
 ) {
     val context = LocalContext.current
+    val delayReportViewModel: DelayReportViewModel = viewModel(
+        factory = DelayReportViewModelFactory(context)
+    )
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
-    val delayImage = delayReportViewModel.imageUri.collectAsState().value
+    val imageState by delayReportViewModel.imageUri.collectAsState()
+    val isLoading by delayReportViewModel.isLoading.collectAsState()
+    val error by delayReportViewModel.error.collectAsState()
 
     LaunchedEffect(Unit) {
         delayReportViewModel.fetchDelayReports()
@@ -112,43 +121,61 @@ fun HomeScreen(
             }
         },
     ) { paddingValues ->
-        OSMDroidMapView(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            context = context,
-            locationPermissionGranted = locationPermissionGranted,
-            locationViewModel = locationViewModel,
-            delayReports = delayReports,
-            onMarkerClick = { report ->
-                selectedReport = report
-                delayReportViewModel.fetchAreaName(
-                    context,
-                    report.latitude,
-                    report.longitude
-                ) { name ->
-                    areaName = name
-                }
-                delayReportViewModel.fetchTrafficImage(
-                    report.imageUri
-                )
-                // Trigger prediction for the selected report
-                mlViewModelML.predictTrafficDelay(
-                    TrafficData(
-                        latitude = report.latitude,
-                        longitude = report.longitude,
-                        delayTitle = report.problemReport,
-                        severityLevel = when (report.severity) {
-                            "Low" -> 1
-                            "Medium" -> 3
-                            "High" -> 5
-                            else -> 3
-                        },
-                        weather = "Unknown"
+        Box(modifier = Modifier.fillMaxSize()) {
+            OSMDroidMapView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                context = context,
+                locationPermissionGranted = locationPermissionGranted,
+                locationViewModel = locationViewModel,
+                delayReports = delayReports,
+                onMarkerClick = { report ->
+                    selectedReport = report
+                    delayReportViewModel.fetchAreaName(
+                        report.latitude,
+                        report.longitude
+                    ) { name ->
+                        areaName = name
+                    }
+                    delayReportViewModel.fetchTrafficImage(report.imageUri)
+
+                    mlViewModelML.predictTrafficDelay(
+                        TrafficData(
+                            latitude = report.latitude,
+                            longitude = report.longitude,
+                            delayTitle = report.problemReport,
+                            severityLevel = when (report.severity) {
+                                "Low" -> 1
+                                "Medium" -> 3
+                                "High" -> 5
+                                else -> 3
+                            },
+                            weather = "Unknown"
+                        )
                     )
+                }
+            )
+
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(64.dp),
+                    strokeWidth = 6.dp
                 )
             }
-        )
+
+            if (error.isNotEmpty()) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp)
+                )
+            }
+        }
     }
 
     if (routeSuggestionDialogVisible) {
@@ -167,7 +194,9 @@ fun HomeScreen(
                 selectedReport = null
             },
             onDismiss = { selectedReport = null },
-            delayImage,
+            imageState = imageState,
+            isLoading = isLoading,
+            error = error
         )
     }
 }
@@ -178,7 +207,9 @@ fun ReportDetailsDialog(
     areaName: String?,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
-    delayImage: ByteArray?,
+    imageState: ByteArray?,
+    isLoading: Boolean,
+    error: String
 ) {
     val timestamp = report.timestamp
     val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -186,33 +217,66 @@ fun ReportDetailsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        modifier = Modifier,
         title = { Text("Delay Report") },
         text = {
             Column {
-
                 Text("Reported at: $formattedTime")
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(delayImage)
-                        .crossfade(true)
-                        .memoryCachePolicy(CachePolicy.ENABLED)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .build(),
-                    contentDescription = "delay image",
-                    modifier = Modifier
-                        .height(200.dp)
-                        .width(400.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .align(Alignment.CenterHorizontally),
-                    contentScale = ContentScale.Crop,
-                    error = painterResource(R.drawable.baseline_cloud_download_24)
-                )
+
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+
+                    imageState != null -> {
+                        Image(
+                            bitmap = imageState.toImageBitmap(),
+                            contentDescription = "Delay image",
+                            modifier = Modifier
+                                .height(200.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .align(Alignment.CenterHorizontally),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    error.isNotEmpty() -> {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_wifi_off_24),
+                                contentDescription = "Error",
+                                modifier = Modifier.size(50.dp)
+                            )
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+
+                    else -> {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_image_not_supported_24),
+                            contentDescription = "No image",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Problem: ${report.problemReport}")
                 Text("Severity: ${report.severity}")
                 Text("Accuracy: ${calculateAccuracyPercentage(report.upvotes, report.downvotes)}%")
-                Text("Area: ${areaName ?: "Fetching..."}")
+                Text("Area: ${areaName ?: "Unknown Area"}")
                 Text("Reported by: ${report.userId}")
             }
         },
@@ -227,6 +291,10 @@ fun ReportDetailsDialog(
             }
         }
     )
+}
+
+fun ByteArray.toImageBitmap(): ImageBitmap {
+    return BitmapFactory.decodeByteArray(this, 0, size).asImageBitmap()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

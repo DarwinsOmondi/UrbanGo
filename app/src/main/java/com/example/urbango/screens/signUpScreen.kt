@@ -73,193 +73,188 @@ fun SignUpScreen(
     var passwordVisibility by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
-
-    Scaffold(
-        Modifier.background(Color(0xFFFFFFFF))
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            Modifier.fillMaxWidth()
         ) {
-            Column(
-                Modifier.fillMaxWidth()
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth()) {
 
-                    Row(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(16.dp)
+                Row(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        "Already have an account ?",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onNavigateToLogin()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF61ABF3)),
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text(
-                            "Already have an account ?",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                onNavigateToLogin()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF61ABF3)),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("Sign In")
-                        }
+                        Text("Sign In")
                     }
                 }
-                Image(
-                    painter = painterResource(R.drawable.signiupimage),
-                    contentDescription = null,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.5f),
-                    contentScale = ContentScale.Crop
-                )
-                OutlinedTextField(
-                    value = userName,
-                    onValueChange = { userName = it },
-                    label = {
-                        Text(
-                            "Username",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                    },
-                    modifier = Modifier
+            }
+            Image(
+                painter = painterResource(R.drawable.signiupimage),
+                contentDescription = null,
+                modifier =
+                    Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
-                )
+                        .fillMaxHeight(0.5f),
+                contentScale = ContentScale.Crop
+            )
+            OutlinedTextField(
+                value = userName,
+                onValueChange = { userName = it },
+                label = {
+                    Text(
+                        "Username",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+            )
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = {
-                        Text(
-                            "Email",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
-                )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = {
+                    Text(
+                        "Email",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+            )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {
-                        Text(
-                            "Password",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = {
+                    Text(
+                        "Password",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                        Icon(
+                            imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = "Toggle Password Visibility",
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                            Icon(
-                                imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = "Toggle Password Visibility",
-                            )
-                        }
                     }
-                )
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            val results = signUpUser(auth, userName, email, password,context)
-                            client.auth.signUpWith(Email) {
-                                this.email = email
-                                this.password = password
-                                data = buildJsonObject {
-                                    put("name", JsonPrimitive(userName))
-                                }
+                }
+            )
+            Button(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        val results = signUpUser(auth, userName, email, password, context)
+                        client.auth.signUpWith(Email) {
+                            this.email = email
+                            this.password = password
+                            data = buildJsonObject {
+                                put("name", JsonPrimitive(userName))
                             }
-                            if (results.isSuccess) {
-                                onSignUpSuccess()
-                            } else {
-                                errorMessage = results.exceptionOrNull()?.message
-                                isLoading = false
-                            }
+                        }
+                        if (results.isSuccess) {
+                            onSignUpSuccess()
+                        } else {
+                            errorMessage = results.exceptionOrNull()?.message
                             isLoading = false
                         }
-                    },
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxWidth(0.8f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            "Sign Up",
-                            style = TextStyle(
-                                color = Color.White,
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.labelLarge.fontWeight
-                            )
-                        )
+                        isLoading = false
                     }
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth(0.8f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        "Sign Up",
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.labelLarge.fontWeight
+                        )
+                    )
                 }
             }
         }
     }
+
 }
 
 private suspend fun signUpUser(

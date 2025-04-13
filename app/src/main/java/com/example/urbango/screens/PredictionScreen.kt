@@ -24,9 +24,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.urbango.components.DelayReportViewModelFactory
 import com.example.urbango.model.PredictionResult
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PredictionViewModelML
@@ -36,8 +38,9 @@ import com.example.urbango.viewModels.PredictionViewModelML
 fun PredictedDelayScreen(
     navController: NavHostController,
     mlViewModelML: PredictionViewModelML = viewModel(),
-    delayReportViewModel: DelayReportViewModel = viewModel(),
 ) {
+    val context = LocalContext.current
+    val delayReportViewModel: DelayReportViewModel = viewModel(factory = DelayReportViewModelFactory(context))
     val trafficDelays by delayReportViewModel.trafficDelays.collectAsState()
     val predictionResults by mlViewModelML.predictionResults.collectAsState()
 

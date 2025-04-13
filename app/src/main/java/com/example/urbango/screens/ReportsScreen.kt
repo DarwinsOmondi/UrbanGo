@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -41,20 +39,17 @@ import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.example.urbango.viewModels.PermissionViewModel
-import com.example.urbango.viewModels.UploadState
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
 import java.io.File
-import java.util.concurrent.Executors
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import androidx.core.net.toUri
-import com.example.urbango.components.MessageSnackBar
-import com.example.urbango.model.DelayReport
+import com.example.urbango.components.DelayReportViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
@@ -66,7 +61,9 @@ fun ReportScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val locationViewModel: PermissionViewModel = viewModel()
-    val reportViewModel: DelayReportViewModel = viewModel()
+    val reportViewModel: DelayReportViewModel = viewModel(
+        factory = DelayReportViewModelFactory(context)
+    )
     val locationPermissionGranted = locationViewModel.checkLocationPermission(context)
     var reportDetails by remember { mutableStateOf("") }
     val selectedGeoPoints = remember { mutableStateListOf<GeoPoint>() }
@@ -102,14 +99,6 @@ fun ReportScreen(navController: NavHostController) {
     val cardColor by remember { mutableStateOf(cardColors.random()) }
     var selectedCardTitle by remember { mutableStateOf("") }
     var delayImages by remember { mutableStateOf<ByteArray?>(null) }
-
-
-//    LaunchedEffect(Unit) {
-//        val bucketName = "trafficimages"
-//        val bucket = client.storage[bucketName]
-//        val delayImage = bucket.downloadAuthenticated()
-//        delayImages = delayImage
-//    }
 
     Scaffold(
         topBar = {

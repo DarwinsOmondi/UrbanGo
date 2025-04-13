@@ -69,161 +69,156 @@ fun SignInScreen(
     var passwordVisibility by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    Scaffold(
-        Modifier.background(Color(0xFFFFFFFF))
-    ) { paddingValue ->
-        Box(
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValue)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            Modifier.fillMaxWidth()
         ) {
-            Column(
+            Box(
                 Modifier.fillMaxWidth()
             ) {
-                Box(
-                    Modifier.fillMaxWidth()
+                Row(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(24.dp)
                 ) {
-                    Row(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            "Don't have an account ?",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                onNavigateToSignUp()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF61ABF3)),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("Sign Up")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Image(
-                        painter = painterResource(R.drawable.signinimage),
-                        contentDescription = null,
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.5f),
+                    Text(
+                        "Don't have an account ?",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onNavigateToSignUp()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF61ABF3)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Sign Up")
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = {
-                        Text(
-                            "Email",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+                Spacer(modifier = Modifier.height(32.dp))
+                Image(
+                    painter = painterResource(R.drawable.signinimage),
+                    contentDescription = null,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.5f),
                 )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = {
+                    Text(
+                        "Email",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+            )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {
-                        Text(
-                            "Password",
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
-                                fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
-                            ),
-                            modifier = Modifier.align(Alignment.Start)
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = {
+                    Text(
+                        "Password",
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight,
+                            fontStyle = MaterialTheme.typography.bodyMedium.fontStyle
+                        ),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.DarkGray,
+                    unfocusedBorderColor = Color.Black
+                ),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                        Icon(
+                            imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = "Toggle Password Visibility",
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.DarkGray,
-                        unfocusedBorderColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 15.dp, bottomEnd = 15.dp),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                            Icon(
-                                imageVector = if (passwordVisibility) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = "Toggle Password Visibility",
-                            )
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        val results = signInUser(auth, email, password, context)
+                        client.auth.signInWith(Email) {
+                            this.email = email
+                            this.password = password
+                        }
+                        if (results.isSuccess) {
+                            isLoading = false
+                            onSignInSuccess()
+                        } else {
+                            errorMessage = results.exceptionOrNull()?.message
+                            isLoading = false
                         }
                     }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isLoading = true
-                            val results = signInUser(auth, email, password,context)
-                            client.auth.signInWith(Email) {
-                                this.email = email
-                                this.password = password
-                            }
-                            if (results.isSuccess) {
-                                isLoading = false
-                                onSignInSuccess()
-                            } else {
-                                errorMessage = results.exceptionOrNull()?.message
-                                isLoading = false
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxWidth(0.8f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth(0.8f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        "Sign In",
+                        style = TextStyle(
                             color = Color.White,
-                            strokeWidth = 2.dp
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            fontWeight = MaterialTheme.typography.labelLarge.fontWeight
                         )
-                    } else {
-                        Text(
-                            "Sign In",
-                            style = TextStyle(
-                                color = Color.White,
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                fontWeight = MaterialTheme.typography.labelLarge.fontWeight
-                            )
-                        )
-                    }
+                    )
                 }
             }
         }

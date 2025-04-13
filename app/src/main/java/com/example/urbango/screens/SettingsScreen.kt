@@ -21,9 +21,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.urbango.components.DelayReportViewModelFactory
 import com.example.urbango.components.PreferencesKeys
 import com.example.urbango.components.dataStore
+import com.example.urbango.viewModels.DelayReportViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,14 +40,24 @@ fun SettingsScreen(navHostController: NavHostController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val dataStore = context.dataStore
+    val viewmodel: DelayReportViewModel = viewModel(
+        factory = DelayReportViewModelFactory(context)
+    )
+    val userEmail = auth.currentUser?.email ?: ""
+    val (userScreenState, userNotificationState) = viewmodel.returnUserScreenState(userEmail)
     val darkModeFlow = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.DARK_MODE] ?: false
     }
-    val darkMode by darkModeFlow.collectAsState(initial = false)
+    var notificationState by remember { mutableStateOf(userNotificationState) }
+
+    val darkMode by darkModeFlow.collectAsState(initial = userScreenState)
+    val currentUser = auth.currentUser
 
     var isSheetOpen by remember { mutableStateOf(false) }
     var currentSheetType by remember { mutableStateOf(SheetType.None) }
     var showDeleteAccountAlertDialog by remember { mutableStateOf(false) }
+    var screenMode: String by remember { mutableStateOf("profile") }
+
 
     val sheetState = rememberModalBottomSheetState()
     Scaffold { innerPadding ->
@@ -60,23 +73,33 @@ fun SettingsScreen(navHostController: NavHostController) {
                 description = if (darkMode) "Enabled" else "Disabled",
                 showSwitch = true,
                 switchChecked = darkMode,
-                onSwitchChange = {
+                onSwitchChange = { newValue ->
                     scope.launch {
-                        dataStore.edit { preferences ->
-                            preferences[PreferencesKeys.DARK_MODE] = it
+                        dataStore.edit { prefs ->
+                            prefs[PreferencesKeys.DARK_MODE] = newValue
                         }
+                        viewmodel.saveUserScreenState(
+                            screenModeEnabled = newValue,
+                            notificationEnabled = notificationState,
+                            userEmail = auth.currentUser?.email ?: "No email set",
+                        )
                     }
                 }
             )
 
-            HorizontalDivider()
-
             SettingsOption(
                 title = "Notifications",
-                description = if (notificationsEnabled) "Enabled" else "Disabled",
+                description = if (notificationState) "Enabled" else "Disabled",
                 showSwitch = true,
-                switchChecked = notificationsEnabled,
-                onSwitchChange = { notificationsEnabled = it }
+                switchChecked = notificationState,
+                onSwitchChange = { newValue ->
+                    notificationState = newValue
+                    viewmodel.saveUserScreenState(
+                        screenModeEnabled = darkMode,
+                        notificationEnabled = newValue,
+                        userEmail = auth.currentUser?.email ?: "No email set",
+                    )
+                }
             )
 
             HorizontalDivider()
@@ -152,7 +175,14 @@ fun SettingsScreen(navHostController: NavHostController) {
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            auth.currentUser?.delete()
+                            if (currentUser != null) {
+                                auth.currentUser?.delete()
+                                navHostController.navigate("signin")
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("User not logged in")
+                                }
+                            }
                         }
                     ) {
                         Text(
