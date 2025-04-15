@@ -26,8 +26,10 @@ import androidx.navigation.NavHostController
 import com.example.urbango.components.DelayReportViewModelFactory
 import com.example.urbango.components.PreferencesKeys
 import com.example.urbango.components.dataStore
+import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
 import com.google.firebase.auth.FirebaseAuth
+import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -221,7 +223,7 @@ fun EmailUpdateSheet(
     snackbarHostState: SnackbarHostState
 ) {
     val auth = FirebaseAuth.getInstance()
-    var email by remember { mutableStateOf(auth.currentUser?.email ?: "") }
+    var newEmail by remember { mutableStateOf(auth.currentUser?.email ?: "") }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -237,8 +239,8 @@ fun EmailUpdateSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = newEmail,
+            onValueChange = { newEmail = it },
             label = {
                 Text(
                     "New Email",
@@ -277,8 +279,11 @@ fun EmailUpdateSheet(
             }
             Spacer(modifier = Modifier.weight(.5f))
             TextButton(onClick = {
-                auth.currentUser?.updateEmail(email)?.addOnCompleteListener { task ->
+                auth.currentUser?.updateEmail(newEmail)?.addOnCompleteListener { task ->
                     scope.launch {
+                        client.auth.modifyUser {
+                            email = newEmail
+                        }
                         if (task.isSuccessful) {
                             snackbarHostState.showSnackbar("Email updated successfully")
                         } else {
@@ -305,7 +310,7 @@ fun PasswordUpdateSheet(
     snackbarHostState: SnackbarHostState
 ) {
     val auth = FirebaseAuth.getInstance()
-    var password by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -321,8 +326,8 @@ fun PasswordUpdateSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = newPassword,
+            onValueChange = { newPassword = it },
             label = {
                 Text(
                     "New Password",
@@ -362,16 +367,18 @@ fun PasswordUpdateSheet(
             Spacer(modifier = Modifier.weight(.5f))
             TextButton(
                 onClick = {
-                    auth.currentUser?.updatePassword(password)?.addOnCompleteListener { task ->
-                        scope.launch {
-                            if (task.isSuccessful) {
-                                snackbarHostState.showSnackbar("Password updated successfully")
-                            } else {
-                                snackbarHostState.showSnackbar("Failed to update password")
-                            }
+                    scope.launch {
+                        val user = client.auth.currentUserOrNull()
+                        client.auth.modifyUser {
+                            password = newPassword
                         }
-                        onClose()
+                        if (user != null) {
+                            client.auth.resetPasswordForEmail(newPassword)
+                        } else {
+                            snackbarHostState.showSnackbar("User not logged in")
+                        }
                     }
+                    onClose()
                 }) {
                 Text(
                     "Update",

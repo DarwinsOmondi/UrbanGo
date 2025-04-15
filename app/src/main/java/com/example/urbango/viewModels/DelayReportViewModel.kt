@@ -69,7 +69,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     private fun startNetworkMonitoring() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             while (true) {
                 val newState = isOnline()
                 if (!isNetworkConnected && newState) {
@@ -95,7 +95,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     private fun startAutoRefresh() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             while (true) {
                 fetchDelayReports()
                 delay(1000)
@@ -110,49 +110,54 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
         severity: String,
         imageUri: String
     ) {
-        val user = auth.currentUser ?: run {
-            _uploadState.value = UploadState.Error("User not authenticated")
-            return
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = auth.currentUser ?: run {
+                _uploadState.value = UploadState.Error("User not authenticated")
+                return@launch
+            }
+
+            _uploadState.value = UploadState.Loading
+
+            val reportData = hashMapOf(
+                "userId" to user.uid,
+                "latitude" to latitude,
+                "longitude" to longitude,
+                "problemReport" to problemReport,
+                "severity" to severity,
+                "imageUri" to imageUri,
+                "timestamp" to System.currentTimeMillis()
+            )
+
+            db.collection("delays").add(reportData)
+                .addOnSuccessListener {
+                    updateUserPoints(user.uid, 10)
+                    _uploadState.value = UploadState.Success("Report saved successfully")
+                }
+                .addOnFailureListener { e ->
+                    _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
+                }
         }
-
-        _uploadState.value = UploadState.Loading
-
-        val reportData = hashMapOf(
-            "userId" to user.uid,
-            "latitude" to latitude,
-            "longitude" to longitude,
-            "problemReport" to problemReport,
-            "severity" to severity,
-            "imageUri" to imageUri,
-            "timestamp" to System.currentTimeMillis()
-        )
-
-        db.collection("delays").add(reportData)
-            .addOnSuccessListener {
-                updateUserPoints(user.uid, 10)
-                _uploadState.value = UploadState.Success("Report saved successfully")
-            }
-            .addOnFailureListener { e ->
-                _uploadState.value = UploadState.Error("Failed to save report: ${e.message}")
-            }
     }
 
     fun fetchDelayReports() {
-        db.collection("delays")
-            .addSnapshotListener { snapshots, e ->
-                if (e != null) {
-                    _uploadState.value =
-                        UploadState.Error("Failed to listen for updates: ${e.message}")
-                    return@addSnapshotListener
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            db.collection("delays")
+                .addSnapshotListener { snapshots, e ->
+                    if (e != null) {
+                        _uploadState.value =
+                            UploadState.Error("Failed to listen for updates: ${e.message}")
+                        return@addSnapshotListener
+                    }
 
-                _delayReports.value = snapshots?.documents?.mapNotNull { document ->
-                    document.toObject(DelayReport::class.java)?.copy(documentId = document.id)
-                } ?: emptyList()
-            }
+                    _delayReports.value = snapshots?.documents?.mapNotNull { document ->
+                        document.toObject(DelayReport::class.java)?.copy(documentId = document.id)
+                    } ?: emptyList()
+                }
+        }
     }
 
     fun deleteDelayReport(reportId: String) {
+        viewModelScope.launch { }
         _uploadState.value = UploadState.Loading
         db.collection("delays").document(reportId).delete()
             .addOnSuccessListener {
@@ -271,7 +276,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
         longitude: Double,
         onResult: (String?) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val addresses = withContext(Dispatchers.IO) {
                     Geocoder(context, Locale.getDefault()).getFromLocation(latitude, longitude, 1)
@@ -299,7 +304,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
         severity: Int,
         weather: String,
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 _isLoading.value = true
                 client.postgrest["trafficdelay"].insert(
@@ -320,7 +325,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     fun fetchTrafficDelaysFromSupabase() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val reports = client.postgrest["trafficdelay"].select().decodeList<TrafficData>()
                 _trafficDelays.value = reports
@@ -345,7 +350,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     fun fetchTrafficImage(imageUri: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 _isLoading.value = true
 
@@ -377,13 +382,15 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     private suspend fun updateImageInBackground(imageUri: String) {
-        try {
-            val imageBytes = client.storage["trafficimages"].downloadAuthenticated(imageUri)
-            if (shouldCacheImage(imageUri, imageBytes.size)) {
-                cacheImage(imageUri, imageBytes)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val imageBytes = client.storage["trafficimages"].downloadAuthenticated(imageUri)
+                if (shouldCacheImage(imageUri, imageBytes.size)) {
+                    cacheImage(imageUri, imageBytes)
+                }
+            } catch (e: Exception) {
+                Log.e("BgRefresh", "Background refresh failed", e)
             }
-        } catch (e: Exception) {
-            Log.e("BgRefresh", "Background refresh failed", e)
         }
     }
 
@@ -446,7 +453,7 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
     }
 
     fun clearImageCache() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.IO) {
                 imageCacheDir.listFiles()?.forEach { it.delete() }
                 cachedImageUris.clear()

@@ -24,9 +24,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.components.DelayReportViewModelFactory
+import com.example.urbango.components.UserPointsViewModelFactory
 import com.example.urbango.model.DelayReport
+import com.example.urbango.repository.SupabaseClient.client
 import com.example.urbango.viewModels.DelayReportViewModel
+import com.example.urbango.viewModels.UserPointsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.serialization.json.jsonPrimitive
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +43,7 @@ fun CrowdedScreen(navController: NavHostController) {
     )
     val delayReports by viewModel.delayReports.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+
 
     LaunchedEffect(Unit) {
         viewModel.fetchDelayReports()
@@ -127,7 +133,12 @@ fun DelayReportCard(
 
     val accuracyPercentage =
         delayReportViewModel.calculateAccuracyPercentage(report.upvotes, report.downvotes)
-
+    val userPointViewModel: UserPointsViewModel = viewModel(
+        factory = UserPointsViewModelFactory()
+    )
+    val userPoints = userPointViewModel.userPoints.collectAsState().value
+    val userName =
+        client.auth.currentUserOrNull()?.userMetadata?.get("email")?.jsonPrimitive?.content
 
 
     delayReportViewModel.fetchAreaName(
@@ -181,7 +192,20 @@ fun DelayReportCard(
                 verticalAlignment = Alignment.Bottom
             ) {
                 Row {
-                    IconButton(onClick = onUpvote) {
+                    IconButton(
+                        onClick = {
+                            onUpvote()
+                            userName?.let { name ->
+                                if (userPoints > 0) {
+                                    userPointViewModel.updateUserPoints(userPoints + 5, name)
+                                } else {
+                                    if (userPoints == 0){
+                                        userPointViewModel.savePointsToSupabase(10, name)
+                                    }
+                                }
+                            }
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ThumbUp,
                             contentDescription = "Upvote",
@@ -197,7 +221,18 @@ fun DelayReportCard(
                 }
 
                 Row {
-                    IconButton(onClick = onDownvote) {
+                    IconButton(
+                        onClick = {
+                            onDownvote()
+
+                            userName?.let { name ->
+                                if (userPoints > 0) {
+                                    userPointViewModel.updateUserPoints(userPoints + 5, name)
+                                } else {
+                                    userPointViewModel.savePointsToSupabase(10, name)
+                                }
+                            }
+                        }) {
                         Icon(
                             imageVector = Icons.Default.ThumbDown,
                             contentDescription = "Down vote",

@@ -100,18 +100,21 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.kotlinx.coroutines.guava)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-    implementation ("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
-    //ktor
-    implementation("io.ktor:ktor-client-android:3.1.1")
+    // Ktor dependencies
+    implementation("io.ktor:ktor-client-core:2.3.10")
+    implementation("io.ktor:ktor-client-okhttp:2.3.10")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.10")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.10")
 
+    // Supabase dependencies (fixed version and module names)
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.2.1"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.2.1")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:2.2.1")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.2.1")
 
-    // Supabase dependencies
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.3"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    implementation("io.github.jan-tennert.supabase:realtime-kt")
-    implementation("io.github.jan-tennert.supabase:auth-kt")
-    implementation("io.github.jan-tennert.supabase:storage-kt")
 
 
     // Coil for Image Loading
@@ -127,5 +130,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.4")
     implementation("androidx.datastore:datastore-core:1.1.4")
 
-    implementation ("com.google.accompanist:accompanist-navigation-animation:0.34.0")
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
+
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
 }

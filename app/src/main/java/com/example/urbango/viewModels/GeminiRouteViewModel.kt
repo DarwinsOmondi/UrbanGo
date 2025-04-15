@@ -1,5 +1,6 @@
 package com.example.urbango.viewModels
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import com.google.ai.client.generativeai.type.BlockThreshold
 import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -47,29 +49,30 @@ class GeminiRouteViewModel : ViewModel() {
         desiredDestination: String,
         startingLocation: String
     ) {
-        currentJob?.cancel()
+        viewModelScope.launch(Dispatchers.IO) {
+            currentJob?.cancel()
 
-        currentJob = viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-            routeResults = null
+            currentJob = viewModelScope.launch {
+                isLoading = true
+                errorMessage = null
+                routeResults = null
 
-            try {
-                val delayPoints = if (locationOfDelay.isNotEmpty()) {
-                    locationOfDelay.joinToString(
-                        separator = "\n",
-                        prefix = "These are the reported delay points (latitude, longitude):\n",
-                        postfix = "\nPlease avoid these areas if possible."
-                    ) { report ->
-                        "- (${report.latitude}, ${report.longitude})"
+                try {
+                    val delayPoints = if (locationOfDelay.isNotEmpty()) {
+                        locationOfDelay.joinToString(
+                            separator = "\n",
+                            prefix = "These are the reported delay points (latitude, longitude):\n",
+                            postfix = "\nPlease avoid these areas if possible."
+                        ) { report ->
+                            "- (${report.latitude}, ${report.longitude})"
+                        }
+                    } else {
+                        "There are currently no reported delay points."
                     }
-                } else {
-                    "There are currently no reported delay points."
-                }
 
-                val prompt = content {
-                    text(
-                        """
+                    val prompt = content {
+                        text(
+                            """
                         I need you to act as a navigation assistant. Suggest the best alternative route 
                         from $startingLocation to $desiredDestination,explain the recommended route clearly, 
                         mentioning key roads and turns. considering the following information:
@@ -83,28 +86,30 @@ class GeminiRouteViewModel : ViewModel() {
                         4. Any alternative options if available
                         5. Important traffic considerations
                         
-                        Keep the response concise but informative, focusing only on the directions.
+                        Keep the response concise but informative, focusing only on the directions.Don't give your response in note form.
                         """.trimIndent()
-                    )
-                }
+                        )
+                    }
 
-                val response = model.generateContent(prompt)
+                    val response = model.generateContent(prompt)
 
-                if (response.text.isNullOrEmpty()) {
-                    errorMessage = "Received empty response from the API"
-                } else {
-                    routeResults = response.text
+                    if (response.text.isNullOrEmpty()) {
+                        errorMessage = "Received empty response from the API"
+                    } else {
+                        routeResults = response.text
+                    }
+                } catch (e: Exception) {
+                    errorMessage = when (e) {
+                        is java.net.SocketTimeoutException -> "Request timed out. Please check your connection."
+                        is java.net.UnknownHostException -> "No internet connection."
+                        else -> "Failed to get route: ${e.localizedMessage ?: "Unknown error"}"
+                    }
+                    Log.e("RouteViewModel", "Error getting route: ${e.message}", e)
+                    routeResults = null
+                } finally {
+                    isLoading = false
+                    currentJob = null
                 }
-            } catch (e: Exception) {
-                errorMessage = when (e) {
-                    is java.net.SocketTimeoutException -> "Request timed out. Please check your connection."
-                    is java.net.UnknownHostException -> "No internet connection."
-                    else -> "Failed to get route: ${e.localizedMessage ?: "Unknown error"}"
-                }
-                routeResults = null
-            } finally {
-                isLoading = false
-                currentJob = null
             }
         }
     }

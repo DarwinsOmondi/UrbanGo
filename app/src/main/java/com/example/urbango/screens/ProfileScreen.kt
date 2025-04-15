@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,11 +21,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
+import com.example.urbango.components.UserPointsViewModelFactory
+import com.example.urbango.repository.SupabaseClient.client
+import com.example.urbango.viewModels.UserPointsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +39,7 @@ fun ProfileScreen(navController: NavHostController) {
     val auth = FirebaseAuth.getInstance()
     var showAboutUs by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showLeaderBoard by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -39,6 +48,7 @@ fun ProfileScreen(navController: NavHostController) {
                         when {
                             showAboutUs -> "About Us"
                             showSettings -> "Settings"
+                            showLeaderBoard -> "LeaderBoard"
                             else -> "Profile"
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -46,12 +56,16 @@ fun ProfileScreen(navController: NavHostController) {
                     )
                 },
                 navigationIcon = {
-                    if (showAboutUs || showSettings) {
+                    if (showAboutUs || showSettings || showLeaderBoard) {
                         IconButton(onClick = {
                             showAboutUs = false
                             showSettings = false
+                            showLeaderBoard = false
                         }) {
-                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
                         }
                     }
                 },
@@ -59,7 +73,7 @@ fun ProfileScreen(navController: NavHostController) {
             )
         },
         bottomBar = {
-            if (!showSettings && showAboutUs) {
+            if (!showSettings && !showAboutUs && !showLeaderBoard) {
                 BottomNavigationBar(navController)
             } else {
                 BottomNavigationBar(navController)
@@ -75,6 +89,7 @@ fun ProfileScreen(navController: NavHostController) {
             when {
                 showAboutUs -> AboutUsScreen()
                 showSettings -> SettingsScreen(navController)
+                showLeaderBoard -> UserPointsScreen()
                 else -> {
                     ProfileHeader(auth)
                     ProfileOptions(
@@ -85,6 +100,7 @@ fun ProfileScreen(navController: NavHostController) {
                         },
                         onShowAboutUs = { showAboutUs = true },
                         onShowSettings = { showSettings = true },
+                        onShowLeaderBoard = { showLeaderBoard = true },
                         auth
                     )
                 }
@@ -95,27 +111,20 @@ fun ProfileScreen(navController: NavHostController) {
 
 @Composable
 fun ProfileHeader(auth: FirebaseAuth) {
-    val userName = auth.currentUser?.displayName ?: "Traveler"
-    val userEmail = auth.currentUser?.email ?: "Not Available"
-    var userPoints by remember { mutableIntStateOf(0) }
-
+    val userName = auth.currentUser?.displayName
+    val userEmail = auth.currentUser?.email ?: "Email"
+    val pointsViewModel: UserPointsViewModel = viewModel(
+        factory = UserPointsViewModelFactory()
+    )
+    val loading by pointsViewModel.loadingState.collectAsState()
+    val error by pointsViewModel.errorState.collectAsState()
     val db = FirebaseFirestore.getInstance()
     val userId = auth.currentUser?.uid
 
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            val userRef = db.collection("users").document(userId)
-            userRef.get().addOnSuccessListener { document ->
-                if (!document.exists()) {
-                    userRef.set(hashMapOf("points" to 0))
-                }
-            }
-            val listener = userRef.addSnapshotListener { snapshot, _ ->
-                userPoints = snapshot?.getLong("points")?.toInt() ?: 0
-            }
-        }
+    LaunchedEffect(Unit) {
+        pointsViewModel.fetchSingleUserPoints(userEmail)
     }
-
+    val userPoints = pointsViewModel.userPoints.collectAsState().value
     val badge = getBadge(userPoints)
 
     Column(
@@ -139,17 +148,23 @@ fun ProfileHeader(auth: FirebaseAuth) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = userName,
+            text = userName.toString().trim(),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(text = userEmail, style = MaterialTheme.typography.bodyMedium)
+        Text(text = userEmail.toString(), style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Points: $userPoints",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
-        )
+        if (loading) {
+            CircularProgressIndicator()
+        } else if (error != null) {
+            Text(text = error.toString())
+        } else {
+            Text(
+                text = "Points: $userPoints",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Badge: $badge",
@@ -166,8 +181,16 @@ fun ProfileOptions(
     onSignOut: () -> Unit,
     onShowAboutUs: () -> Unit,
     onShowSettings: () -> Unit,
+    onShowLeaderBoard: () -> Unit,
     auth: FirebaseAuth,
 ) {
+    val scope = rememberCoroutineScope()
+    fun signout() {
+        scope.launch {
+            client.auth.signOut()
+            onSignOut()
+        }
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,9 +207,12 @@ fun ProfileOptions(
                 onShowAboutUs()
             }
             HorizontalDivider()
+            ProfileOption(Icons.Default.Leaderboard, false, "Leaderboard") {
+                onShowLeaderBoard()
+            }
+            HorizontalDivider()
             ProfileOption(Icons.AutoMirrored.Filled.ExitToApp, true, "Log Out") {
-                auth.signOut()
-                onSignOut()
+                signout()
             }
         }
     }

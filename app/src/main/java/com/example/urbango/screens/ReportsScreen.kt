@@ -50,8 +50,12 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import androidx.core.net.toUri
 import com.example.urbango.components.DelayReportViewModelFactory
+import com.example.urbango.components.UserPointsViewModelFactory
+import com.example.urbango.viewModels.UserPointsViewModel
+import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.FileOutputStream
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -83,6 +87,12 @@ fun ReportScreen(navController: NavHostController) {
     val weatherDropdownExpanded = remember { mutableStateOf(false) }
     val isLoading = reportViewModel.isLoading.collectAsState()
     val error = reportViewModel.error.collectAsState()
+    val userPointViewModel: UserPointsViewModel = viewModel(
+        factory = UserPointsViewModelFactory()
+    )
+    val userPoints = userPointViewModel.userPoints.collectAsState().value
+    val userName =
+        client.auth.currentUserOrNull()?.userMetadata?.get("email")?.jsonPrimitive?.content
 
     val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
@@ -302,6 +312,14 @@ fun ReportScreen(navController: NavHostController) {
                                 snackbarHostState.showSnackbar("Please select a location on the map.")
                             }
                         }
+                        if (userPoints > 0) {
+                            userPointViewModel.updateUserPoints(
+                                userPoints + 5,
+                                userName.toString()
+                            )
+                        } else {
+                            userPointViewModel.savePointsToSupabase(10, userName.toString())
+                        }
                     }
                     reportDetails = ""
                 },
@@ -310,7 +328,7 @@ fun ReportScreen(navController: NavHostController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
             ) {
                 if (isLoading.value) {
-                    LinearProgressIndicator()
+                    CircularProgressIndicator()
                 } else {
                     Text("Submit Report")
                 }
@@ -447,16 +465,13 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
 
                                         statusText = "Uploading..."
 
-                                        // Upload to Supabase
                                         client.storage
                                             .from(bucketName)
                                             .upload(
                                                 path = fileName,
                                                 data = fileBytes,
-                                            ) {
                                                 upsert = true
-                                            }
-
+                                            )
                                         val publicUrl = client.storage
                                             .from(bucketName)
                                             .publicUrl(fileName)
