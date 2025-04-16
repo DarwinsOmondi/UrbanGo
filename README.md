@@ -15,7 +15,7 @@
 
 ## Tech Stack 🛠️
 - **Frontend:** Jetpack Compose (Android)
-- **Database:** Firebase for real-time updates
+- **Database:** Firebase for authentication updates / Supabse for storage,real-time and database
 - **Mapping:** OpenStreetMap for location tracking
 ## Why UrbanGo? 🌍
 🔹 **Community-Driven:** Users contribute real-time information to enhance the public transport experience.  
