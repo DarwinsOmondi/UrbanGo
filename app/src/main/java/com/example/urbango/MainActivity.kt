@@ -34,7 +34,7 @@ import com.example.urbango.screens.ResetPasswordScreen
 import com.example.urbango.screens.SignInScreen
 import com.example.urbango.screens.SignUpScreen
 import com.example.urbango.screens.SuggestedRouteScreen
-import com.example.urbango.screens.UserPointsScreen
+import com.example.urbango.ui.LeaderboardScreen
 import com.example.urbango.ui.theme.UrbanGoTheme
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.firebase.auth.FirebaseAuth
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                 preference[PreferencesKeys.DARK_MODE] ?: false
             }
             val darkMode = darkModeFlow.collectAsState(initial = false)
-            UrbanGoTheme(darkTheme = darkMode.value) {
+            UrbanGoTheme() {
                 UrbanGoApp(navController, auth, this)
             }
         }
@@ -179,7 +179,7 @@ fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth, context: Co
             ResetPassword(onBackToLogin = { navController.navigate("signin") })
         }
         composable("userPointsScreen") {
-            UserPointsScreen()
+            LeaderboardScreen()
         }
     }
 }

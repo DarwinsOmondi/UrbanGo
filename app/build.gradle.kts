@@ -117,6 +117,7 @@ dependencies {
 
 
 
+
     // Coil for Image Loading
     implementation("io.coil-kt:coil-compose:2.6.0")
 
@@ -133,5 +134,8 @@ dependencies {
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
 
     implementation("com.google.android.gms:play-services-auth:21.3.0")
+
+    //swipe to refresh
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.31.1-alpha")
 
 }

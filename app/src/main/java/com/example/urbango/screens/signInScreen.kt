@@ -253,7 +253,7 @@ fun SignInScreen(
                         isLoading = true
                         try {
                             val results = signInUser(auth, email, password, context)
-                            client.auth.signUpWith(Email) {
+                            client.auth.signInWith(Email) {
                                 this.email = email
                                 this.password = password
                             }

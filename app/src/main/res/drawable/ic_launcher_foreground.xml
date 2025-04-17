@@ -39,11 +39,4 @@
         android:fillColor="#000000"
         android:pathData="M42,58 L46,58 Q48,58 48,60 L48,62 Q48,64 46,64 L42,64 Q40,64 40,62 L40,60 Q40,58 42,58Z M62,58 L66,58 Q68,58 68,60 L68,62 Q68,64 66,64 L62,64 Q60,64 60,62 L60,60 Q60,58 62,58Z" />
 
-    <!-- Traffic Delay Symbol (Wavy Line) -->
-    <path
-        android:strokeColor="#FF0000"
-        android:strokeWidth="2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M34,40 Q38,44 42,40 Q46,44 50,40 Q54,44 58,40 Q62,44 66,40 Q70,44 74,40" />
 </vector>

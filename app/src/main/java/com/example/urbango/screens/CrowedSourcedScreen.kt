@@ -138,6 +138,8 @@ fun DelayReportCard(
     )
     val userPoints = userPointViewModel.userPoints.collectAsState().value
     val userName =
+        client.auth.currentUserOrNull()?.userMetadata?.get("name")?.jsonPrimitive?.content
+    val userEmail =
         client.auth.currentUserOrNull()?.userMetadata?.get("email")?.jsonPrimitive?.content
 
 
@@ -195,12 +197,12 @@ fun DelayReportCard(
                     IconButton(
                         onClick = {
                             onUpvote()
-                            userName?.let { name ->
+                            userEmail?.let { name ->
                                 if (userPoints > 0) {
                                     userPointViewModel.updateUserPoints(userPoints + 5, name)
                                 } else {
-                                    if (userPoints == 0){
-                                        userPointViewModel.savePointsToSupabase(10, name)
+                                    if (userPoints == 0) {
+                                        userPointViewModel.savePointsToSupabase(10, name, userEmail)
                                     }
                                 }
                             }
@@ -225,11 +227,11 @@ fun DelayReportCard(
                         onClick = {
                             onDownvote()
 
-                            userName?.let { name ->
+                            userEmail?.let { name ->
                                 if (userPoints > 0) {
                                     userPointViewModel.updateUserPoints(userPoints + 5, name)
                                 } else {
-                                    userPointViewModel.savePointsToSupabase(10, name)
+                                    userPointViewModel.savePointsToSupabase(10, name, userEmail)
                                 }
                             }
                         }) {

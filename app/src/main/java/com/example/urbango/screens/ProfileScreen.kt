@@ -27,6 +27,7 @@ import com.example.urbango.R
 import com.example.urbango.components.BottomNavigationBar
 import com.example.urbango.components.UserPointsViewModelFactory
 import com.example.urbango.repository.SupabaseClient.client
+import com.example.urbango.ui.LeaderboardScreen
 import com.example.urbango.viewModels.UserPointsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -89,7 +90,7 @@ fun ProfileScreen(navController: NavHostController) {
             when {
                 showAboutUs -> AboutUsScreen()
                 showSettings -> SettingsScreen(navController)
-                showLeaderBoard -> UserPointsScreen()
+                showLeaderBoard -> LeaderboardScreen()
                 else -> {
                     ProfileHeader(auth)
                     ProfileOptions(

@@ -92,7 +92,9 @@ fun ReportScreen(navController: NavHostController) {
     )
     val userPoints = userPointViewModel.userPoints.collectAsState().value
     val userName =
-        client.auth.currentUserOrNull()?.userMetadata?.get("email")?.jsonPrimitive?.content
+        client.auth.currentUserOrNull()?.userMetadata?.get("name")?.jsonPrimitive?.content
+    val userEmail =
+        client.auth.currentUserOrNull()?.userMetadata?.get("name")?.jsonPrimitive?.content
 
     val cardColors = listOf(
         Color(0xFF1565C0), // Deep Blue
@@ -315,10 +317,14 @@ fun ReportScreen(navController: NavHostController) {
                         if (userPoints > 0) {
                             userPointViewModel.updateUserPoints(
                                 userPoints + 5,
-                                userName.toString()
+                                userEmail.toString()
                             )
                         } else {
-                            userPointViewModel.savePointsToSupabase(10, userName.toString())
+                            userPointViewModel.savePointsToSupabase(
+                                10,
+                                userName.toString(),
+                                userEmail.toString()
+                            )
                         }
                     }
                     reportDetails = ""
@@ -449,8 +455,6 @@ fun CameraCard(onImageCaptured: (Uri, String) -> Unit, onClose: () -> Unit) {
                                 scope.launch(Dispatchers.IO) {
                                     try {
                                         statusText = "Compressing..."
-
-                                        // Compress the image
                                         val bitmap =
                                             BitmapFactory.decodeFile(photoFile.absolutePath)
                                         val compressedFile =
