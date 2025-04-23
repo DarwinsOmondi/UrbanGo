@@ -1,6 +1,7 @@
 package com.example.urbango
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -54,8 +55,11 @@ class MainActivity : ComponentActivity() {
                 preference[PreferencesKeys.DARK_MODE] ?: false
             }
             val darkMode = darkModeFlow.collectAsState(initial = false)
+            val deepLinkUri = intent?.data
+            val accessToken = deepLinkUri?.getQueryParameter("access_token")
+            val refreshToken = deepLinkUri?.getQueryParameter("refresh_token")
             UrbanGoTheme() {
-                UrbanGoApp(navController, auth, this)
+                UrbanGoApp(navController, auth, accessToken, refreshToken)
             }
         }
     }
@@ -65,7 +69,12 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalAnimationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth, context: Context) {
+fun UrbanGoApp(
+    navController: NavHostController,
+    auth: FirebaseAuth,
+    resetToken: String?,
+    refreshToken: String?
+) {
     val startDestination: String = if (auth.currentUser != null) {
         "home"
     } else {
@@ -170,6 +179,8 @@ fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth, context: Co
             )
         ) {
             ResetPasswordScreen(
+                resetToken,
+                refreshToken,
                 onNavigateToLogin = {
                     navController.navigate("signin")
                 }
@@ -184,16 +195,16 @@ fun UrbanGoApp(navController: NavHostController, auth: FirebaseAuth, context: Co
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun UrbanGoAppPreview() {
-    UrbanGoTheme {
-        val navController = rememberNavController()
-        UrbanGoApp(
-            navController,
-            auth = FirebaseAuth.getInstance(),
-            LocalContext.current
-        )
-    }
-}
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Preview(showBackground = true)
+//@Composable
+//fun UrbanGoAppPreview() {
+//    UrbanGoTheme {
+//        val navController = rememberNavController()
+//        UrbanGoApp(
+//            navController,
+//            auth = FirebaseAuth.getInstance(),
+//            LocalContext.current
+//        )
+//    }
+//}

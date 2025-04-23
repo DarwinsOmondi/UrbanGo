@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="UrbanGo.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-04-11T10:11:00.220363800Z">
+        <DropdownSelection timestamp="2025-04-23T15:40:07.969259300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=3Z01Z3365Y351900182" />

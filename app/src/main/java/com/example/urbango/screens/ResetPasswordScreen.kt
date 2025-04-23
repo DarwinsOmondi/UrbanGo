@@ -1,6 +1,7 @@
 package com.example.urbango.screens
 
 import android.app.Activity
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ResetPasswordScreen(
+    resetToken: String?,
+    refreshToken: String?,
     onNavigateToLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -59,6 +62,7 @@ fun ResetPasswordScreen(
     var success by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = Modifier
@@ -164,6 +168,7 @@ fun ResetPasswordScreen(
                                 }
                             } catch (e: Exception) {
                                 errorMessage = "Failed to reset password. Please try again."
+                                Log.e("ResetPasswordScreen", "Error resetting password", e)
                             } finally {
                                 isLoading = false
                             }
