@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TrafficData(
+    val id: Int? = null,
+    val created_at: String? = null,
     val latitude: Double,
     val longitude: Double,
     val delayTitle: String,

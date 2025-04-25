@@ -329,7 +329,9 @@ class DelayReportViewModel(private val context: Context) : ViewModel() {
             try {
                 val reports = client.postgrest["trafficdelay"].select().decodeList<TrafficData>()
                 _trafficDelays.value = reports
+                Log.d("TrafficDelays", "Fetched $reports reports")
             } catch (e: Exception) {
+                Log.e("TrafficDelays", "Error fetching reports", e)
                 _uploadState.value = UploadState.Error("Failed to fetch reports: ${e.message}")
             }
         }
