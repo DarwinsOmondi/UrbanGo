@@ -4,7 +4,7 @@
 ✅ **Real-Time Tracking:** View live locations of buses and trains based on GPS data.  
 ✅ **Crowdsourced Updates:** Users can submit and validate reports on delays, overcrowding, and incidents.  
 ✅ **Delay Alerts:** Receive instant notifications about transport delays or cancellations.  
-✅ **Route Optimization:** Find the fastest routes, including walking, biking, and ride-sharing options.  
+✅ **Route Optimization:** Find the fastest routes, including walking, biking, and ride-sharing options. 
 ✅ **Accessibility Features:** Highlights accessible routes for people with disabilities or those traveling with strollers.  
 ✅ **Gamification:** Users can earn poitns from reporting a delay or voting for the delay accuracy.
 ✅ **AI Predictions:** Utilize machine learning to predict delays using historical and real-time data.
