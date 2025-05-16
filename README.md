@@ -7,7 +7,7 @@
 ✅ **Delay Alerts:** Receive instant notifications about transport delays or cancellations.  
 ✅ **Route Optimization:** Find the fastest routes, including walking, biking, and ride-sharing options. 
 ✅ **Accessibility Features:** Highlights accessible routes for people with disabilities or those traveling with strollers.  
-✅ **Gamification:** Users can earn poitns from reporting a delay or voting for the delay accuracy.
+✅ **Gamification:** Users can earn poitns and badges from reporting a delay or voting for the delay accuracy.
 ✅ **AI Predictions:** Utilize machine learning to predict delays using historical and real-time data.
 ## Stretch Goals 🎯
 🔹 **Micro-Mobility Integration:** Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for better last-mile connectivity.  
