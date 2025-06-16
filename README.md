@@ -14,16 +14,20 @@
 🔹 **Micro-Mobility Integration:** Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for better last-mile connectivity.  
 🔹 **Offline Mode:** Allow users to access route data even in areas with limited internet connectivity.  
 
+
 ## Tech Stack 🛠️
 - **Frontend:** Jetpack Compose (Android)
 - **Database:** Firebase for authentication updates / Supabse for storage,real-time and database
 - **Mapping:** OpenStreetMap for location tracking
+
+- 
 ## Why UrbanGo? 🌍
 🔹 **Community-Driven:** Users contribute real-time information to enhance the public transport experience.  
 🔹 **Increased Accessibility:** Designed with special features for people with disabilities.  
 🔹 **Scalable:** Can be expanded to any city or region with public transport services.  
 
 ## Installation & Setup ⚙️
+
 
 1. Clone the repository:
    ```bash
@@ -40,6 +44,7 @@ We welcome contributions! Feel free to submit pull requests, report issues, or s
 
 ## License 📜
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 
 ##sample screenshot of the app screens
 ![Screenshot (32)](https://github.com/user-attachments/assets/cb55daf0-9ddd-4b9b-b697-4103953b9ea8)
