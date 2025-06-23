@@ -2,7 +2,9 @@
 
 
 **UrbanGo** is an innovative Android app designed to help commuters navigate public transport systems with ease. By providing real-time updates on bus and train locations, delays, and alternative routes, UrbanGo empowers users to make informed travel decisions.
+
 ## Features 🚀
+
 ✅ **Real-Time Tracking:** View live locations of buses and trains based on GPS data.  
 ✅ **Crowdsourced Updates:** Users can submit and validate reports on delays, overcrowding, and incidents.  
 ✅ **Delay Alerts:** Receive instant notifications about transport delays or cancellations.  
@@ -10,18 +12,22 @@
 ✅ **Accessibility Features:** Highlights accessible routes for people with disabilities or those traveling with strollers.  
 ✅ **Gamification:** Users can earn poitns and badges from reporting a delay or voting for the delay accuracy.
 ✅ **AI Predictions:** Utilize machine learning to predict delays using historical and real-time data.
+
 ## Stretch Goals 🎯
+
 🔹 **Micro-Mobility Integration:** Combine public transport with bike-sharing, scooter-sharing, or ride-sharing for better last-mile connectivity.  
 🔹 **Offline Mode:** Allow users to access route data even in areas with limited internet connectivity.  
 
 
 ## Tech Stack 🛠️
+
 - **Frontend:** Jetpack Compose (Android)
 - **Database:** Firebase for authentication updates / Supabse for storage,real-time and database
 - **Mapping:** OpenStreetMap for location tracking
 
 - 
 ## Why UrbanGo? 🌍
+
 🔹 **Community-Driven:** Users contribute real-time information to enhance the public transport experience.  
 🔹 **Increased Accessibility:** Designed with special features for people with disabilities.  
 🔹 **Scalable:** Can be expanded to any city or region with public transport services.  
